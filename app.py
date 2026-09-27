@@ -123,9 +123,17 @@ def submit():
     for q in ALL_QUESTIONS:
         q_id = str(q.get('id'))
         user_answer = normalize_text(answers_map.get(q_id, ''))
-        correct_answer = normalize_text(q.get('answer', ''))
-        if user_answer and user_answer == correct_answer:
-            score += 1
+        raw_ans = q.get('answer', '')
+        
+        # Если ответ в базе - список допустимых вариантов
+        if isinstance(raw_ans, list):
+            valid_answers = [normalize_text(a) for a in raw_ans]
+            if user_answer and user_answer in valid_answers:
+                score += 1
+        else:
+            correct_answer = normalize_text(raw_ans)
+            if user_answer and user_answer == correct_answer:
+                score += 1
     
     # Определяем уровень по баллам
     if score <= 15:

@@ -543,30 +543,47 @@
         "id": 46,
         "type": "input",
         "question": "Helena _______________ when I came home. (to read)",
-        "answer": "was reading"
+        "answer": [
+            "was reading"
+        ]
     },
     {
         "id": 47,
         "type": "input",
         "question": "I ________________ in London for five years by January. (to live)",
-        "answer": "will have been living"
+        "answer": [
+            "will have been living",
+            "will have lived",
+            "'ll have been living",
+            "'ll have lived"
+        ]
     },
     {
         "id": 48,
         "type": "input",
         "question": "Look! The children _____________ outside. (to play)",
-        "answer": "are playing"
+        "answer": [
+            "are playing"
+        ]
     },
     {
         "id": 49,
         "type": "input",
         "question": "If she ___________________ harder, she would have passed the test. (to study)",
-        "answer": "had studied"
+        "answer": [
+            "had studied",
+            "'d studied"
+        ]
     },
     {
         "id": 50,
         "type": "input",
         "question": "Come on! It is 7 pm. I _____________ for you for an hour.  (to wait)",
-        "answer": "have been waiting"
+        "answer": [
+            "have been waiting",
+            "have waited",
+            "'ve been waiting",
+            "'ve waited"
+        ]
     }
 ]
