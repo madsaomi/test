@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stanford English Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary: #facc15; 
+            --primary-hover: #eab308; 
+            --bg-color: #fefce8; 
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #171717; 
+            --text-muted: #525252;
+            --btn-text: #000000; 
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-user-select: none; 
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            z-index: -1;
+            opacity: 0.4;
+            animation: drift 20s infinite alternate ease-in-out;
+        }
+        .blob-1 { width: 50vw; height: 50vw; background: #fef08a; top: -10%; left: -10%; }
+        .blob-2 { width: 40vw; height: 40vw; background: #e4e4e7; bottom: -10%; right: -10%; animation-delay: -7s; }
+        .blob-3 { width: 35vw; height: 35vw; background: #fde047; top: 30%; left: 70%; animation-delay: -14s; }
+        
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            50% { transform: translate(50px, 30px) scale(1.1) rotate(10deg); }
+            100% { transform: translate(-30px, -50px) scale(0.9) rotate(-5deg); }
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 650px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo { width: 120px; border-radius: 12px; margin-bottom: 20px; animation: fadeInDown 0.8s ease-out; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { font-size: 26px; font-weight: 700; margin-top: 0; margin-bottom: 10px; letter-spacing: -0.02em; }
+        p.subtitle { color: var(--text-muted); margin-bottom: 30px; font-size: 15px; line-height: 1.6; }
+
+        .btn, button, input {
+            font-family: inherit;
+        }
+
+        .btn {
+            background: var(--primary); color: var(--btn-text); border: none; padding: 16px 28px;
+            border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; margin-top: 25px;
+            box-shadow: 0 4px 14px rgba(234, 179, 8, 0.35);
+        }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(234, 179, 8, 0.45); }
+        .btn:active { transform: translateY(1px) scale(0.98); box-shadow: 0 2px 8px rgba(234, 179, 8, 0.3); }
+
+        .progress-bg { width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.5s ease; border-radius: 4px; }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .swipe-container { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .header-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .counter { font-weight: 600; color: var(--text-muted); font-size: 15px; }
+        
+        .circular-timer { position: relative; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; }
+        .circular-timer svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+        .circular-timer circle { fill: none; stroke-width: 4; stroke-linecap: round; }
+        .timer-bg { stroke: #f1f5f9; }
+        .timer-path { stroke: var(--primary); stroke-dasharray: 138; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+        .timer-text { font-weight: 700; font-size: 16px; color: var(--text-main); position: relative; z-index: 1; }
+        
+        .urgent .timer-path { stroke: #ef4444; animation: pulseStroke 1s infinite; }
+        .urgent .timer-text { color: #ef4444; animation: pulseText 1s infinite; }
+
+        h2#question-text { font-size: 20px; font-weight: 600; margin-bottom: 25px; line-height: 1.5; text-align: left; }
+        .options { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+        
+        .option-label {
+            display: flex; align-items: center; padding: 18px; border: 2px solid #e2e8f0; border-radius: 14px;
+            cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-size: 16px; font-weight: 500;
+            background: white; line-height: 1.4;
+        }
+        .option-label:hover { border-color: #cbd5e1; background: #f8fafc; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .option-label:active { transform: scale(0.98); } 
+        
+        .option-label input[type="radio"] {
+            appearance: none; width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 50%;
+            margin-right: 14px; transition: all 0.2s; position: relative; flex-shrink: 0;
+        }
+        .option-label input[type="radio"]:checked { border-color: var(--primary); }
+        .option-label input[type="radio"]:checked::after {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 12px; height: 12px; background: var(--primary); border-radius: 50%;
+        }
+        .option-label:has(input[type="radio"]:checked) { border-color: var(--primary); background: #fefce8; box-shadow: 0 4px 15px rgba(234, 179, 8, 0.15); }
+
+        .form-group { text-align: left; margin-bottom: 20px; }
+        label.field-title { font-weight: 600; font-size: 14px; color: var(--text-main); display: block; margin-bottom: 8px; margin-top: 20px; }
+        input[type="text"], input[type="tel"] {
+            width: 100%; padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box;
+            font-size: 16px; transition: all 0.2s; outline: none; background: white;
+        }
+        input[type="text"]:focus, input[type="tel"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.15); }
+
+        .phone-wrapper { display: flex; align-items: center; border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; transition: all 0.2s; background: white; }
+        .phone-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.15); }
+        .phone-prefix { background: #f8fafc; padding: 16px; font-weight: 600; color: var(--text-muted); border-right: 2px solid #e2e8f0; }
+        .phone-wrapper input[type="tel"] { border: none; border-radius: 0; margin: 0; padding-left: 12px; box-shadow: none !important; }
+
+        .branch-selector { display: flex; gap: 12px; }
+        .branch-btn {
+            flex: 1; padding: 16px 10px; border: 2px solid #e2e8f0; border-radius: 12px; text-align: center;
+            cursor: pointer; font-weight: 600; transition: all 0.2s; font-size: 15px; background: white;
+        }
+        .branch-btn input { display: none; }
+        .branch-btn:hover { border-color: #cbd5e1; }
+        .branch-btn:active { transform: scale(0.97); }
+        .branch-btn:has(input:checked) { border-color: var(--primary); background: #fefce8; color: #000; box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2); }
+
+        @media (max-width: 600px) {
+            .container { padding: 24px 18px; border-radius: 20px; }
+            h1 { font-size: 22px; }
+            h2#question-text { font-size: 18px; }
+            .option-label { padding: 14px; font-size: 15px; }
+            .btn { padding: 14px 20px; font-size: 15px; }
+        }
+
+        /* СТИЛЬНЫЙ ТОАСТ (УВЕДОМЛЕНИЕ) */
+        .toast-notification {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: #1e293b;
+            color: #ffffff;
+            padding: 14px 22px;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            z-index: 99999;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+        .toast-notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseStroke { 0% { stroke-width: 4; } 50% { stroke-width: 7; } 100% { stroke-width: 4; } }
+        @keyframes pulseText { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body oncontextmenu="return false" oncopy="return false" oncut="return false" onpaste="return false">
+
+<!-- ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ -->
+<div id="custom-toast" class="toast-notification">
+    <span style="font-size: 18px;">💡</span>
+    <span id="toast-text">Пожалуйста, выберите или введите вариант ответа перед переходом.</span>
+</div>
+
+<!-- РАССЛАБЛЯЮЩИЙ ФОН -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<!-- АНТИЧИТ ЭКРАНЫ -->
+<div id="warning-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999; color:white; display:none; flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(10px);">
+    <div style="font-size:70px; margin-bottom:20px;">⚠️</div>
+    <h1 style="color:#ef4444; font-size:32px;">Внимание!</h1>
+    <p style="font-size:18px; text-align:center; max-width:400px; line-height:1.5;">Вы покинули вкладку с тестом. Это строго запрещено и расценивается как попытка списывания.<br><br>Предупреждение: <b style="color:#facc15;"><span id="warning-count">1</span> из 3</b></p>
+    <button class="btn" style="width:250px; background:#ef4444; color:white; box-shadow:none;" onclick="closeWarning()">Я понял, вернуться к тесту</button>
+</div>
+
+<div id="cheat-fail-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999; color:white; display:none; flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(10px);">
+    <div style="font-size:70px; margin-bottom:20px;">🚫</div>
+    <h1 style="color:#ef4444; font-size:32px;">Тест аннулирован</h1>
+    <p style="font-size:18px; text-align:center; max-width:400px; line-height:1.5;">Вы превысили лимит предупреждений.<br>Результаты теста не будут сохранены.</p>
+</div>
+
+<div class="container">
+    <img src="/static/stanford.jpg" alt="Логотип" class="logo">
+
+    <!-- СТАРТОВЫЙ ЭКРАН -->
+    <div id="start-screen" class="screen active swipe-container">
+        <h1 style="font-size: 26px;">Stanford Language Center</h1>
+        <p class="subtitle" style="text-align: center; margin-top: 15px; font-size: 15px;">
+            Вступительное тестирование по английскому языку.<br><br>
+            Количество вопросов: <b>50</b><br>
+            Время на каждый вопрос ограничено.<br><br>
+            <span style="color: #b91c1c; font-size: 13px;">⚠️ Списывание и скриншоты запрещены.</span>
+        </p>
+        <button class="btn" onclick="startTest()">Начать тест</button>
+    </div>
+
+    <!-- ЭКРАН ВОПРОСА -->
+    <div id="question-screen" class="screen swipe-container">
+        <div class="progress-bg"><div class="progress-fill" id="progress-bar"></div></div>
+        
+        <div class="header-info">
+            <div class="counter"><span id="q-current">1</span> / <span id="q-total">50</span></div>
+            <div class="circular-timer" id="timer-box">
+                <svg width="50" height="50">
+                    <circle class="timer-bg" cx="25" cy="25" r="22"></circle>
+                    <circle class="timer-path" id="timer-path" cx="25" cy="25" r="22"></circle>
+                </svg>
+                <div class="timer-text" id="time-left">30</div>
+            </div>
+        </div>
+        <h2 id="question-text">Текст вопроса</h2>
+        <div id="answer-container"></div>
+        <button id="next-btn" class="btn" onclick="nextQuestion()">Следующий</button>
+    </div>
+
+    <!-- ЭКРАН ФОРМЫ (РЕЗУЛЬТАТЫ) -->
+    <div id="form-screen" class="screen swipe-container">
+        <h1>Тест завершен</h1>
+        <p class="subtitle">Пожалуйста, заполните данные для сохранения результата.</p>
+        
+        <div class="form-group">
+            <label class="field-title" for="fio">Фамилия и Имя</label>
+            <input type="text" id="fio" placeholder="Например: Алишер Рустамов" required autocomplete="off" onkeydown="if(event.key==='Enter') document.getElementById('phone').focus();">
+            
+            <label class="field-title">Номер телефона</label>
+            <div class="phone-wrapper">
+                <span class="phone-prefix">+998</span>
+                <input type="tel" id="phone" placeholder="90 123 45 67" maxlength="12" oninput="formatPhoneInput(this)" onkeydown="if(event.key==='Enter') submitResults();" required autocomplete="off">
+            </div>
+            
+            <label class="field-title">Выберите филиал</label>
+            <div class="branch-selector">
+                <label class="branch-btn">
+                    <input type="radio" name="branch" value="Офис">
+                    🏢 Офис
+                </label>
+                <label class="branch-btn">
+                    <input type="radio" name="branch" value="Универ">
+                    🎓 Универ
+                </label>
+            </div>
+        </div>
+        
+        <button class="btn" onclick="submitResults()">Отправить результаты</button>
+    </div>
+
+    <!-- ЭКРАН УСПЕХА -->
+    <div id="success-screen" class="screen swipe-container">
+        <div style="font-size: 60px; margin-bottom: 15px; animation: pulseText 2s infinite;">✅</div>
+        <h1 style="color: #15803d;">Ответы приняты!</h1>
+        <p class="subtitle" style="font-size: 16px; margin-top: 15px; color: var(--text-main);">
+            Ваш результат успешно сохранен в нашей системе.<br><br>
+            Пожалуйста, <b>обратитесь к администратору</b> (или на ресепшн), чтобы узнать свой уровень и получить дальнейшие инструкции.
+        </p>
+    </div>
+</div>
+
+<script>
+    /* ================= АНТИЧИТ (БЛОКИРОВКА КЛАВИШ) ================= */
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'c') || (e.ctrlKey && e.key === 'v') || (e.key === 'PrintScreen')) {
+            e.preventDefault(); return false;
+        }
+    });
+    document.addEventListener('keyup', (e) => {
+        if (e.key === 'PrintScreen') { 
+            navigator.clipboard.writeText(''); 
+            showToast('📸 Скриншоты запрещены!'); 
+        }
+    });
+
+    function formatPhoneInput(input) {
+        let val = input.value.replace(/\D/g, '').substring(0, 9);
+        let formatted = '';
+        if (val.length > 0) formatted += val.substring(0, 2);
+        if (val.length > 2) formatted += ' ' + val.substring(2, 5);
+        if (val.length > 5) formatted += ' ' + val.substring(5, 7);
+        if (val.length > 7) formatted += ' ' + val.substring(7, 9);
+        input.value = formatted;
+    }
+
+    /* ================= АНТИЧИТ (ОТСЛЕЖИВАНИЕ ВКЛАДОК) ================= */
+    let isTestActive = false;
+    let warningsCount = 0;
+    let warningOverlayActive = false;
+
+    window.addEventListener('blur', () => {
+        if (isTestActive && !warningOverlayActive) {
+            warningsCount++;
+            if (warningsCount >= 3) {
+                // Провал
+                isTestActive = false;
+                clearInterval(timerInterval);
+                document.getElementById('cheat-fail-screen').style.display = 'flex';
+            } else {
+                // Предупреждение
+                warningOverlayActive = true;
+                document.getElementById('warning-count').innerText = warningsCount;
+                document.getElementById('warning-screen').style.display = 'flex';
+            }
+        }
+    });
+
+    function closeWarning() {
+        warningOverlayActive = false;
+        document.getElementById('warning-screen').style.display = 'none';
+    }
+    
+    // Предупреждение перед закрытием/обновлением вкладки
+    window.addEventListener('beforeunload', (e) => {
+        if (isTestActive) {
+            e.preventDefault();
+            e.returnValue = 'Тест еще не завершен. Ваши ответы будут потеряны!';
+            return e.returnValue;
+        }
+    });
+    /* ================================================================ */
+
+    const questions = {{ questions | tojson }};
+    document.getElementById('q-total').innerText = questions.length;
+    
+    let currentQuestionIndex = 0;
+    const userAnswers = {};
+    let timerInterval;
+    let timeLeft;
+    let totalTime;
+    let testStartTime;
+
+    function startTest() { 
+        isTestActive = true;
+        testStartTime = Date.now();
+        swipeScreen('start-screen', 'question-screen'); 
+        setTimeout(showQuestion, 400); 
+    }
+
+    function swipeScreen(hideId, showId) {
+        const hideEl = document.getElementById(hideId);
+        const showEl = document.getElementById(showId);
+        hideEl.style.opacity = '0';
+        hideEl.style.transform = 'translateX(-50px)';
+        setTimeout(() => {
+            hideEl.classList.remove('active');
+            showEl.classList.add('active');
+            showEl.style.opacity = '0';
+            showEl.style.transform = 'translateX(50px)';
+            void showEl.offsetWidth; 
+            showEl.style.opacity = '1';
+            showEl.style.transform = 'translateX(0)';
+        }, 300);
+    }
+
+    function showQuestion() {
+        if (currentQuestionIndex >= questions.length) { endTest(); return; }
+
+        const q = questions[currentQuestionIndex];
+        const questionText = document.getElementById('question-text');
+        const container = document.getElementById('answer-container');
+        
+        document.getElementById('q-current').innerText = currentQuestionIndex + 1;
+        const progressPercent = ((currentQuestionIndex) / questions.length) * 100;
+        document.getElementById('progress-bar').style.width = progressPercent + '%';
+
+        questionText.style.opacity = 0; container.style.opacity = 0;
+        questionText.style.transform = 'translateX(20px)'; container.style.transform = 'translateX(20px)';
+
+        setTimeout(() => {
+            questionText.innerText = q.question;
+            container.innerHTML = ''; 
+
+            if (q.type === 'choice') {
+                totalTime = 30; timeLeft = 30;
+                const optionsDiv = document.createElement('div');
+                optionsDiv.className = 'options';
+                q.options.forEach((opt) => {
+                    const label = document.createElement('label');
+                    label.className = 'option-label';
+                    label.innerHTML = `<input type="radio" name="answer" value="${opt.replace(/"/g, '&quot;')}"> ${opt}`;
+                    optionsDiv.appendChild(label);
+                });
+                container.appendChild(optionsDiv);
+            } else if (q.type === 'input') {
+                totalTime = 40; timeLeft = 40;
+                container.innerHTML = `<input type="text" id="open-answer" placeholder="Введите ответ..." onpaste="return false;" autocomplete="off" onkeydown="if(event.key==='Enter') nextQuestion();">`;
+                setTimeout(() => document.getElementById('open-answer').focus(), 100);
+            }
+
+            questionText.style.opacity = 1; container.style.opacity = 1;
+            questionText.style.transform = 'translateX(0)'; container.style.transform = 'translateX(0)';
+            
+            updateTimerDisplay();
+            startTimer();
+        }, 200);
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        const timerBox = document.getElementById('timer-box');
+        timerBox.classList.remove('urgent');
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            
+            if (timeLeft <= 5 && timeLeft > 0) { timerBox.classList.add('urgent'); }
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerBox.classList.remove('urgent');
+                nextQuestion(true); 
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        document.getElementById('time-left').innerText = timeLeft;
+        const offset = 138 - (timeLeft / totalTime) * 138;
+        document.getElementById('timer-path').style.strokeDashoffset = offset;
+    }
+
+    let isTransitioning = false;
+
+    let toastTimeout;
+    function showToast(message) {
+        const toast = document.getElementById('custom-toast');
+        const toastText = document.getElementById('toast-text');
+        toastText.innerText = message;
+        toast.classList.add('show');
+        
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    function nextQuestion(timeOut = false) {
+        if (isTransitioning) return;
+
+        const q = questions[currentQuestionIndex];
+        let answerVal = '';
+
+        if (q.type === 'choice') {
+            const selected = document.querySelector('input[name="answer"]:checked');
+            if (selected) answerVal = selected.value;
+        } else if (q.type === 'input') {
+            const inputEl = document.getElementById('open-answer');
+            if (inputEl) {
+                answerVal = inputEl.value.trim();
+                inputEl.blur(); // Скрываем мобильную клавиатуру
+            }
+        }
+
+        // Если время не вышло и ответ не выбран - требуем ответ
+        if (!timeOut && !answerVal) {
+            const container = document.querySelector('.container');
+            container.classList.remove('shake');
+            void container.offsetWidth; // Триггер рефлоу для повторной анимации
+            container.classList.add('shake');
+            
+            showToast("Пожалуйста, выберите или введите вариант ответа перед переходом.");
+            return;
+        }
+
+        clearInterval(timerInterval);
+
+        if (q && q.id !== undefined) {
+            userAnswers[q.id] = answerVal;
+        }
+
+        isTransitioning = true;
+        currentQuestionIndex++;
+        showQuestion();
+        setTimeout(() => { isTransitioning = false; }, 350);
+    }
+
+    function endTest() {
+        isTestActive = false; // Отключаем античит
+        clearInterval(timerInterval);
+        document.getElementById('progress-bar').style.width = '100%';
+        swipeScreen('question-screen', 'form-screen');
+    }
+
+    function submitResults() {
+        const fio = document.getElementById('fio').value.trim();
+        const phoneRaw = document.getElementById('phone').value.replace(/\D/g, '');
+        const branchInput = document.querySelector('input[name="branch"]:checked');
+
+        const container = document.querySelector('.container');
+        const triggerShake = () => {
+            container.classList.remove('shake');
+            void container.offsetWidth;
+            container.classList.add('shake');
+        };
+
+        if (!fio || fio.length < 3) { 
+            triggerShake();
+            showToast("Пожалуйста, введите корректное Фамилию и Имя."); 
+            document.getElementById('fio').focus();
+            return; 
+        }
+        if (phoneRaw.length !== 9) { 
+            triggerShake();
+            showToast("Номер телефона должен содержать 9 цифр после +998."); 
+            document.getElementById('phone').focus();
+            return; 
+        }
+        if (!branchInput) { 
+            triggerShake();
+            showToast("Пожалуйста, выберите филиал."); 
+            return; 
+        }
+
+        const elapsed = Math.round((Date.now() - testStartTime) / 1000);
+        const mins = Math.floor(elapsed / 60);
+        const secs = elapsed % 60;
+        const timeStr = mins + ' мин ' + secs + ' сек';
+
+        const data = { 
+            fio: fio, 
+            phone: "+998" + phoneRaw, 
+            branch: branchInput.value, 
+            answers: userAnswers, 
+            time: timeStr 
+        };
+
+        const btn = document.querySelector('#form-screen .btn');
+        btn.innerText = 'Отправка...'; btn.disabled = true;
+
+        fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+        .then(async response => {
+            const res = await response.json();
+            if (!response.ok || res.status !== 'success') {
+                throw new Error(res.message || 'Ошибка сервера при отправке');
+            }
+            return res;
+        })
+        .then(res => {
+            swipeScreen('form-screen', 'success-screen');
+            setTimeout(() => { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#facc15', '#000000', '#ffffff'] }); }, 400);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            triggerShake();
+            showToast("Ошибка: " + error.message);
+            btn.innerText = 'Отправить результаты'; btn.disabled = false;
+        });
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+# Переменные окружения и секреты
+.env
+.env.*
+!.env.example
+
+# Кэш Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Виртуальные окружения
+venv/
+env/
+ENV/
+.venv/
+
+# IDE и системный мусор
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,572 @@
+[
+    {
+        "id": 1,
+        "type": "choice",
+        "question": "My brother ____ a teacher.",
+        "options": [
+            "be",
+            "am",
+            "is",
+            "are"
+        ],
+        "answer": "is"
+    },
+    {
+        "id": 2,
+        "type": "choice",
+        "question": "Islam and Azamat learn English together. __________ are friends.",
+        "options": [
+            "We",
+            "She",
+            "You",
+            "They"
+        ],
+        "answer": "They"
+    },
+    {
+        "id": 3,
+        "type": "choice",
+        "question": "Is this cat _______?",
+        "options": [
+            "you",
+            "him",
+            "yours",
+            "her"
+        ],
+        "answer": "yours"
+    },
+    {
+        "id": 4,
+        "type": "choice",
+        "question": "His dream is to become ____ football player.",
+        "options": [
+            "an",
+            "a",
+            "the",
+            "–"
+        ],
+        "answer": "a"
+    },
+    {
+        "id": 5,
+        "type": "choice",
+        "question": "__________ a lot of restaurants near our hotel.",
+        "options": [
+            "There is",
+            "These are",
+            "They is",
+            "There are"
+        ],
+        "answer": "There are"
+    },
+    {
+        "id": 6,
+        "type": "choice",
+        "question": "My sisters __________ horror films.",
+        "options": [
+            "does not like",
+            "likes",
+            "likes not",
+            "do not like"
+        ],
+        "answer": "do not like"
+    },
+    {
+        "id": 7,
+        "type": "choice",
+        "question": "We __________ a wonderful holiday last month.",
+        "options": [
+            "have",
+            "had",
+            "has",
+            "having"
+        ],
+        "answer": "had"
+    },
+    {
+        "id": 8,
+        "type": "choice",
+        "question": "Aziz __________ not at the party yesterday.",
+        "options": [
+            "is",
+            "am",
+            "were",
+            "was"
+        ],
+        "answer": "was"
+    },
+    {
+        "id": 9,
+        "type": "choice",
+        "question": "___ a cup of cappuccino? -  Yes, please.",
+        "options": [
+            "Do you like",
+            "Want you",
+            "Would you like",
+            "Are you like"
+        ],
+        "answer": "Would you like"
+    },
+    {
+        "id": 10,
+        "type": "choice",
+        "question": "This movie is __________ than the one we watched last week.",
+        "options": [
+            "interesting",
+            "most interesting",
+            "the most interesting",
+            "more interesting"
+        ],
+        "answer": "more interesting"
+    },
+    {
+        "id": 11,
+        "type": "choice",
+        "question": "Bob: \"What are your plans for the weekend?\" Leyla: \"I'm not sure yet. I think I ____ stay home and relax.\"",
+        "options": [
+            "will",
+            "going to",
+            "am",
+            "does"
+        ],
+        "answer": "will"
+    },
+    {
+        "id": 12,
+        "type": "choice",
+        "question": "Manzura: \"Do you listen to classical music?\" Aybek: \"No, ____ . I hate it\"",
+        "options": [
+            "never",
+            "sometimes",
+            "usually",
+            "seldom"
+        ],
+        "answer": "never"
+    },
+    {
+        "id": 13,
+        "type": "choice",
+        "question": "Is there ____ water in the bottle? I want to drink.",
+        "options": [
+            "some",
+            "a",
+            "any",
+            "the"
+        ],
+        "answer": "any"
+    },
+    {
+        "id": 14,
+        "type": "choice",
+        "question": "Alan’s computer is  ____  the table, next to the TV.",
+        "options": [
+            "beside",
+            "on",
+            "in",
+            "over"
+        ],
+        "answer": "on"
+    },
+    {
+        "id": 15,
+        "type": "choice",
+        "question": "Aynura ____ a lot of vegetables because she wants to stay healthy.",
+        "options": [
+            "eat",
+            "eats",
+            "is eating",
+            "will eat"
+        ],
+        "answer": "eats"
+    },
+    {
+        "id": 16,
+        "type": "choice",
+        "question": "Aziza: \"Have you ever ____ to Korea?\" Dilnoza: \"Yes, I ____ there last year.\"",
+        "options": [
+            "go / went",
+            "went / have gone",
+            "gone / go",
+            "been / went"
+        ],
+        "answer": "been / went"
+    },
+    {
+        "id": 17,
+        "type": "choice",
+        "question": "Jakhangir and Parakhat have been friends ____ childhood and have many fond memories together.",
+        "options": [
+            "since",
+            "for",
+            "during",
+            "from"
+        ],
+        "answer": "since"
+    },
+    {
+        "id": 18,
+        "type": "choice",
+        "question": "You ____ take your umbrella. The weather forecast says it might rain later.",
+        "options": [
+            "can",
+            "will",
+            "must",
+            "should"
+        ],
+        "answer": "should"
+    },
+    {
+        "id": 19,
+        "type": "choice",
+        "question": "He ____ be at work because his car is parked near his house.",
+        "options": [
+            "can’t",
+            "must",
+            "mustn’t",
+            "would"
+        ],
+        "answer": "can’t"
+    },
+    {
+        "id": 20,
+        "type": "choice",
+        "question": "This is the watch ___ my father gave me for my birthday.",
+        "options": [
+            "when",
+            "where",
+            "whose",
+            "which"
+        ],
+        "answer": "which"
+    },
+    {
+        "id": 21,
+        "type": "choice",
+        "question": "If the children ____ their homework by 6 pm, they can go out to play.",
+        "options": [
+            "will finish",
+            "finish",
+            "would finish",
+            "finished"
+        ],
+        "answer": "finish"
+    },
+    {
+        "id": 22,
+        "type": "choice",
+        "question": "I ___ smoke, but now I lead a healthy lifestyle.",
+        "options": [
+            "use to",
+            "using to",
+            "used to",
+            "uses to"
+        ],
+        "answer": "used to"
+    },
+    {
+        "id": 23,
+        "type": "choice",
+        "question": "Yulduz is becoming a ___ dancer with each class she takes.",
+        "options": [
+            "gooder",
+            "better",
+            "best",
+            "more good"
+        ],
+        "answer": "better"
+    },
+    {
+        "id": 24,
+        "type": "choice",
+        "question": "She enjoys ___ sports at the sports club.",
+        "options": [
+            "do",
+            "to do",
+            "doing",
+            "did"
+        ],
+        "answer": "doing"
+    },
+    {
+        "id": 25,
+        "type": "choice",
+        "question": "My parents encouraged me ___ their path and become a doctor.",
+        "options": [
+            "follow",
+            "following",
+            "to follow",
+            "followed"
+        ],
+        "answer": "to follow"
+    },
+    {
+        "id": 26,
+        "type": "choice",
+        "question": "Direct speech: She said, \"I am washing the dishes now.\"",
+        "options": [
+            "She said that she is washing the dishes.",
+            "She said that she was washing the dishes now.",
+            "She said that she is washing the dishes then.",
+            "She said that she was washing the dishes then."
+        ],
+        "answer": "She said that she was washing the dishes then."
+    },
+    {
+        "id": 27,
+        "type": "choice",
+        "question": "Would you mind ___ the window?",
+        "options": [
+            "opening",
+            "to open",
+            "open",
+            "opens"
+        ],
+        "answer": "opening"
+    },
+    {
+        "id": 28,
+        "type": "choice",
+        "question": "A: I am so nervous. I am going on stage now. B: Well, ___ a leg!",
+        "options": [
+            "do",
+            "make",
+            "break",
+            "create"
+        ],
+        "answer": "break"
+    },
+    {
+        "id": 29,
+        "type": "choice",
+        "question": "She likes ______ singing nor dancing.",
+        "options": [
+            "both",
+            "either",
+            "neither",
+            "not only"
+        ],
+        "answer": "neither"
+    },
+    {
+        "id": 30,
+        "type": "choice",
+        "question": "You cannot enter the building ______ you have the ticket.",
+        "options": [
+            "unless",
+            "in case",
+            "otherwise",
+            "so that"
+        ],
+        "answer": "unless"
+    },
+    {
+        "id": 31,
+        "type": "choice",
+        "question": "Islam suggested ______ this terrible job.",
+        "options": [
+            "quit",
+            "to quitting",
+            "to quit",
+            "quitting"
+        ],
+        "answer": "quitting"
+    },
+    {
+        "id": 32,
+        "type": "choice",
+        "question": "If Atabek __________ IELTS, he will apply for this scholarship.",
+        "options": [
+            "gets",
+            "got",
+            "will get",
+            "would get"
+        ],
+        "answer": "gets"
+    },
+    {
+        "id": 33,
+        "type": "choice",
+        "question": "Do you think he ________ pass the test?",
+        "options": [
+            "is going to",
+            "has",
+            "will",
+            "would be"
+        ],
+        "answer": "will"
+    },
+    {
+        "id": 34,
+        "type": "choice",
+        "question": "I remember ______the door. Don’t worry!",
+        "options": [
+            "to lock",
+            "lock",
+            "to locking",
+            "locking"
+        ],
+        "answer": "locking"
+    },
+    {
+        "id": 35,
+        "type": "choice",
+        "question": "The city __________ my mother was born is Nukus.",
+        "options": [
+            "what",
+            "where",
+            "which",
+            "when"
+        ],
+        "answer": "where"
+    },
+    {
+        "id": 36,
+        "type": "choice",
+        "question": "I'm so excited! My sister's just had a baby boy and I've always wanted a ______ .",
+        "options": [
+            "cousin",
+            "granddaughter",
+            "nephew",
+            "son-in-law"
+        ],
+        "answer": "nephew"
+    },
+    {
+        "id": 37,
+        "type": "choice",
+        "question": "How much do I ______ you? – 500k sums. You can give it whenever you want.",
+        "options": [
+            "owe",
+            "lend",
+            "borrow",
+            "news"
+        ],
+        "answer": "owe"
+    },
+    {
+        "id": 38,
+        "type": "choice",
+        "question": "Do you think this sweater ______ with these jeans?",
+        "options": [
+            "fits",
+            "does",
+            "chooses",
+            "matches"
+        ],
+        "answer": "matches"
+    },
+    {
+        "id": 39,
+        "type": "choice",
+        "question": "The computer broke the first time I used it so the store gave me a full ______.",
+        "options": [
+            "receipt",
+            "discount",
+            "refund",
+            "sale"
+        ],
+        "answer": "refund"
+    },
+    {
+        "id": 40,
+        "type": "choice",
+        "question": "Mekhri was ______ by her grandmother.",
+        "options": [
+            "brought up",
+            "grown up",
+            "given up",
+            "risen up"
+        ],
+        "answer": "brought up"
+    },
+    {
+        "id": 41,
+        "type": "choice",
+        "question": "People with no previous ______need not apply.",
+        "options": [
+            "experiment",
+            "experience",
+            "skills",
+            "experienced"
+        ],
+        "answer": "experience"
+    },
+    {
+        "id": 42,
+        "type": "choice",
+        "question": "After the plane ______off, he was able to relax and start to enjoy the flight.",
+        "options": [
+            "went",
+            "took",
+            "flew",
+            "made"
+        ],
+        "answer": "took"
+    },
+    {
+        "id": 43,
+        "type": "choice",
+        "question": "Theft and ______ are still among the most serious crimes in many countries.",
+        "options": [
+            "welfare",
+            "homicide",
+            "sacrifice",
+            "ignorance"
+        ],
+        "answer": "homicide"
+    },
+    {
+        "id": 44,
+        "type": "choice",
+        "question": "His attitude towards us lately is ______, so I think we should talk to him.",
+        "options": [
+            "intolerable",
+            "virtual",
+            "considerable",
+            "inevitable"
+        ],
+        "answer": "intolerable"
+    },
+    {
+        "id": 45,
+        "type": "choice",
+        "question": "Youngsters should never ______ the importance of education in their future career.",
+        "options": [
+            "capture",
+            "calculate",
+            "judge",
+            "underestimate"
+        ],
+        "answer": "underestimate"
+    },
+    {
+        "id": 46,
+        "type": "input",
+        "question": "Helena _______________ when I came home. (to read)",
+        "answer": "was reading"
+    },
+    {
+        "id": 47,
+        "type": "input",
+        "question": "I ________________ in London for five years by January. (to live)",
+        "answer": "will have been living"
+    },
+    {
+        "id": 48,
+        "type": "input",
+        "question": "Look! The children _____________ outside. (to play)",
+        "answer": "are playing"
+    },
+    {
+        "id": 49,
+        "type": "input",
+        "question": "If she ___________________ harder, she would have passed the test. (to study)",
+        "answer": "had studied"
+    },
+    {
+        "id": 50,
+        "type": "input",
+        "question": "Come on! It is 7 pm. I _____________ for you for an hour.  (to wait)",
+        "answer": "have been waiting"
+    }
+]
