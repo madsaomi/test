@@ -67,6 +67,15 @@ def init_db():
         if "submitted" not in cols:
             conn.execute("ALTER TABLE test_sessions ADD COLUMN submitted INTEGER DEFAULT 0")
 
+        # Маркеры отправленных отчетов (месячных/годовых): защита от дублей между воркерами
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS report_markers (
+                period_key TEXT PRIMARY KEY,
+                kind TEXT NOT NULL,
+                sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
 def save_result(fio, phone, branch, score, total, level, time_spent, answers_map, flags=0, timing_json=None):
     """
     Сохраняет результат тестирования в SQLite базу данных.
@@ -155,3 +164,31 @@ def delete_old_sessions(max_age_hours=6):
             "DELETE FROM test_sessions WHERE created_at < datetime('now', ?)",
             (f"-{int(max_age_hours * 60)} minutes",)
         )
+
+def claim_report(period_key, kind):
+    """Атомарно захватывает право отправить отчет за период.
+    True — этот воркер первый (ему и отправлять), False — уже отправлено/отправляется."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT OR IGNORE INTO report_markers (period_key, kind) VALUES (?, ?)",
+            (period_key, kind)
+        )
+        return cursor.rowcount == 1
+
+def release_report(period_key):
+    """Освобождает маркер (отправка не удалась — следующий цикл повторит)"""
+    with get_db() as conn:
+        conn.execute("DELETE FROM report_markers WHERE period_key = ?", (period_key,))
+
+def get_results_in_range(start_utc, end_utc):
+    """Результаты с created_at в диапазоне [start_utc, end_utc) (строки 'YYYY-MM-DD HH:MM:SS')"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, created_at, fio, phone, branch, score, percentage, level, flags
+            FROM test_results
+            WHERE created_at >= ? AND created_at < ?
+            ORDER BY id ASC
+        """, (start_utc, end_utc))
+        return [dict(row) for row in cursor.fetchall()]

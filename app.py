@@ -4,7 +4,8 @@ import html
 import re
 import time
 import secrets
-from datetime import datetime
+import threading
+from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, render_template, request, jsonify
 import requests
@@ -16,6 +17,7 @@ except ImportError:
     pass
 
 import database
+import reports
 import sheet_generator
 import test_session
 from text_utils import normalize_text
@@ -127,9 +129,60 @@ def _send_tg_worker(message, result_id=None, photo_bytes=None):
             error="; ".join(errors) if errors else None
         )
 
+    return all_success
+
 def send_to_telegram_async(message, result_id=None, photo_bytes=None):
     """Мгновенный запуск отправки в пуле фоновых потоков"""
     executor.submit(_send_tg_worker, message, result_id, photo_bytes)
+
+def send_to_telegram_sync(message):
+    """Синхронная отправка (для отчетов в фоновом потоке). Возвращает успех."""
+    return _send_tg_worker(message)
+
+# ================= ПЕРИОДИЧЕСКИЕ ОТЧЕТЫ =================
+# Месячный — 1-го числа за предыдущий месяц (догоняет, даже если сервер был выключен),
+# годовой — в первую неделю января за весь год.
+# Оба gunicorn-воркера крутят поток-планировщик, но отправляет только тот,
+# кто первым атомарно захватил маркер периода в БД.
+
+def _maybe_send_reports():
+    now = datetime.now(reports.TZ_TASHKENT)
+
+    # Месячный отчет за предыдущий месяц: маркер в БД не дает отправить дважды
+    prev = _prev_month(now)
+    key = f"monthly-{prev.strftime('%Y-%m')}"
+    if database.claim_report(key, "monthly"):
+        text = reports.build_report(prev.year, prev.month)
+        if send_to_telegram_sync(text):
+            print(f"Отчет {key} отправлен")
+        else:
+            database.release_report(key)  # повторим в следующем цикле
+            print(f"Не удалось отправить отчет {key} — повторим")
+
+    # Годовой отчет: всю первую неделю января за предыдущий год
+    if now.month == 1 and now.day <= 7:
+        key = f"yearly-{now.year - 1}"
+        if database.claim_report(key, "yearly"):
+            text = reports.build_report(now.year - 1)
+            if send_to_telegram_sync(text):
+                print(f"Отчет {key} отправлен")
+            else:
+                database.release_report(key)
+
+def _prev_month(dt):
+    return (dt.replace(day=1) - timedelta(days=1)).replace(day=1)
+
+def _report_worker():
+    time.sleep(10)  # даем приложению и БД подняться
+    while True:
+        try:
+            _maybe_send_reports()
+        except Exception as e:
+            print(f"Ошибка планировщика отчетов: {e}")
+        time.sleep(600)  # проверка каждые 10 минут
+
+threading.Thread(target=_report_worker, daemon=True).start()
+# ========================================================
 
 def calculate_level(score, total=50):
     """
@@ -463,6 +516,36 @@ def admin_results():
         limit = 100
 
     return jsonify({"status": "success", "results": database.get_recent_results(limit)})
+
+@app.route('/admin/report')
+def admin_report():
+    """Ручная отправка отчета в Telegram: ?period=2026-10 (месяц) или ?period=2026 (год).
+    Без period — за предыдущий месяц. Требует ADMIN_TOKEN."""
+    if not ADMIN_TOKEN:
+        return jsonify({"status": "error", "message": "Не найдено"}), 404
+
+    token = request.headers.get('X-Admin-Token', '') or request.args.get('key', '')
+    if not secrets.compare_digest(token, ADMIN_TOKEN):
+        return jsonify({"status": "error", "message": "Доступ запрещен"}), 403
+
+    period = request.args.get('period', '').strip()
+    now = datetime.now(reports.TZ_TASHKENT)
+    try:
+        if re.fullmatch(r'\d{4}', period):
+            year, month = int(period), None
+        elif re.fullmatch(r'\d{4}-\d{2}', period):
+            year, month = int(period[:4]), int(period[5:7])
+            if not 1 <= month <= 12:
+                raise ValueError
+        else:
+            prev = _prev_month(now)
+            year, month = prev.year, prev.month
+    except ValueError:
+        return jsonify({"status": "error", "message": "Формат period: ГГГГ или ГГГГ-ММ"}), 400
+
+    text = reports.build_report(year, month)
+    sent = send_to_telegram_sync(text)
+    return jsonify({"status": "success" if sent else "error", "sent": sent, "preview": text})
 
 @app.errorhandler(400)
 def bad_request(e):
