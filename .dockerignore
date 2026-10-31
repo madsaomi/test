@@ -1,0 +1,20 @@
+# Секреты и локальные данные — НЕ должны попадать в Docker-образ
+.env
+.env.*
+*.db
+*.sqlite3
+
+# Git и служебные файлы
+.git
+.gitignore
+.dockerignore
+Dockerfile
+Procfile
+README.md
+
+# Кэш Python
+__pycache__/
+*.py[cod]
+
+# Временные файлы
+_preview/

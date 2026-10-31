@@ -15,6 +15,11 @@ env/
 ENV/
 .venv/
 
+# Базы данных
+*.db
+*.sqlite3
+results.db
+
 # IDE и системный мусор
 .vscode/
 .idea/
