@@ -72,11 +72,18 @@ X-Admin-Token: <ADMIN_TOKEN>      # или ?key=<ADMIN_TOKEN>
 
 Возвращает последние результаты (ФИО, телефон, филиал, баллы, уровень, статус доставки в Telegram).
 
-## Деплой
+## Деплой на Railway
 
-**Railway / любой Docker-хостинг** — используется `Dockerfile` (python 3.11-slim, gunicorn 2 воркера × 4 потока, шрифты DejaVu для бланка). Переменные окружения задаются в панели хостинга.
+1. **Volume (обязательно!)** — файловая система Railway эфемерна: без постоянного диска `results.db` стирается при каждом деплое. Service → **Volumes** → mount path `/data`, затем переменная `DATABASE_PATH=/data/results.db`
+2. **Variables**: `BOT_TOKEN`, `CHAT_ID`, `ADMIN_TOKEN` (опционально)
+3. Deploy from repo — Dockerfile подхватится автоматически (шрифты DejaVu + tzdata уже внутри, время — по Ташкенту)
 
-**Heroku** — используется `Procfile` (gunicorn).
+**Heroku** — используется `Procfile` (gunicorn); для Heroku Postgres не настроено, база — файл SQLite.
+
+## Лимиты (анти-спам, с расчетом на класс за одним Wi-Fi)
+
+- 60 стартов теста с IP за 10 минут
+- 30 успешных отправок с IP за 10 минут
 
 ## Безопасность
 

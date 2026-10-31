@@ -34,6 +34,7 @@
                 // Провал
                 isTestActive = false;
                 clearInterval(timerInterval);
+                clearSid();
                 document.getElementById('cheat-fail-screen').style.display = 'flex';
             } else {
                 // Предупреждение
@@ -86,6 +87,51 @@
                 radio.closest('.branch-btn').classList.add('selected');
             });
         });
+
+        tryResume();
+    }
+
+    // Случайная перезагрузка (свайп на мобильном) не убивает тест:
+    // sid хранится в sessionStorage, сессия живет на сервере
+    function saveSid(id) {
+        try { sessionStorage.setItem('slc_sid', id); } catch (e) {}
+    }
+
+    function clearSid() {
+        try { sessionStorage.removeItem('slc_sid'); } catch (e) {}
+    }
+
+    async function tryResume() {
+        let saved = null;
+        try { saved = sessionStorage.getItem('slc_sid'); } catch (e) {}
+        if (!saved) return;
+
+        try {
+            const res = await fetch('/api/question/' + saved);
+            const data = await res.json();
+            if (data.status !== 'success') {
+                clearSid();
+                return;
+            }
+            sid = saved;
+            if (data.total) totalQuestions = data.total;
+            document.getElementById('q-total').innerText = totalQuestions;
+            isTestActive = true;
+            testStartTime = Date.now();
+
+            document.getElementById('start-screen').classList.remove('active');
+            if (data.finished) {
+                // Тест отвечен, но не отправлен — сразу к форме
+                document.getElementById('progress-bar').style.width = '100%';
+                document.getElementById('form-screen').classList.add('active');
+            } else {
+                document.getElementById('question-screen').classList.add('active');
+                renderQuestion(data.question);
+            }
+            showToast('Продолжаем с того места, где вы остановились.');
+        } catch (e) {
+            // Сервер недоступен — обычный старт
+        }
     }
 
     if (document.readyState === 'loading') {
@@ -109,6 +155,7 @@
             })
             .then(res => {
                 sid = res.sid;
+                saveSid(sid);
                 totalQuestions = res.total;
                 document.getElementById('q-total').innerText = totalQuestions;
                 setTimeout(() => renderQuestion(res.question), 400);
@@ -364,6 +411,7 @@
         })
         .then(res => {
             swipeScreen('form-screen', 'success-screen');
+            clearSid();
             setTimeout(() => {
                 // Конфетти — только если CDN загрузился и пользователь не просил меньше анимаций
                 if (window.confetti && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {

@@ -57,10 +57,15 @@ def init_db():
                 session_id TEXT PRIMARY KEY,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 data_json TEXT NOT NULL,
-                finished INTEGER DEFAULT 0
+                finished INTEGER DEFAULT 0,
+                submitted INTEGER DEFAULT 0
             )
         """)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_sessions_created ON test_sessions(created_at)")
+        # Миграция старых баз: атомарная метка отправки сессии
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(test_sessions)")]
+        if "submitted" not in cols:
+            conn.execute("ALTER TABLE test_sessions ADD COLUMN submitted INTEGER DEFAULT 0")
 
 def save_result(fio, phone, branch, score, total, level, time_spent, answers_map, flags=0, timing_json=None):
     """
@@ -121,6 +126,26 @@ def update_session(session_id, data_json, finished=0):
         conn.execute(
             "UPDATE test_sessions SET data_json = ?, finished = ? WHERE session_id = ?",
             (data_json, finished, session_id)
+        )
+
+def mark_session_submitted(session_id):
+    """Атомарно помечает сессию отправленной.
+    Возвращает True, если пометка поставлена этим вызовом (первым), иначе False —
+    защита от гонки параллельных /submit (дубликатов результата)."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE test_sessions SET submitted = 1 WHERE session_id = ? AND submitted = 0",
+            (session_id,)
+        )
+        return cursor.rowcount == 1
+
+def unmark_session_submitted(session_id):
+    """Снимает метку отправки (если сохранение результата упало — студент может повторить)"""
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE test_sessions SET submitted = 0 WHERE session_id = ?",
+            (session_id,)
         )
 
 def delete_old_sessions(max_age_hours=6):
