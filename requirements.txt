@@ -1,5 +1,5 @@
-Flask>=3.0.0
-requests>=2.31.0
-gunicorn>=21.2.0
-python-dotenv>=1.0.0
-
+Flask~=3.1
+requests~=2.34
+python-dotenv~=1.2
+Pillow~=13.0
+gunicorn~=23.0

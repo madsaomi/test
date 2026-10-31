@@ -1,589 +1,232 @@
 [
-    {
-        "id": 1,
-        "type": "choice",
-        "question": "My brother ____ a teacher.",
-        "options": [
-            "be",
-            "am",
-            "is",
-            "are"
-        ],
-        "answer": "is"
-    },
-    {
-        "id": 2,
-        "type": "choice",
-        "question": "Islam and Azamat learn English together. __________ are friends.",
-        "options": [
-            "We",
-            "She",
-            "You",
-            "They"
-        ],
-        "answer": "They"
-    },
-    {
-        "id": 3,
-        "type": "choice",
-        "question": "Is this cat _______?",
-        "options": [
-            "you",
-            "him",
-            "yours",
-            "her"
-        ],
-        "answer": "yours"
-    },
-    {
-        "id": 4,
-        "type": "choice",
-        "question": "His dream is to become ____ football player.",
-        "options": [
-            "an",
-            "a",
-            "the",
-            "–"
-        ],
-        "answer": "a"
-    },
-    {
-        "id": 5,
-        "type": "choice",
-        "question": "__________ a lot of restaurants near our hotel.",
-        "options": [
-            "There is",
-            "These are",
-            "They is",
-            "There are"
-        ],
-        "answer": "There are"
-    },
-    {
-        "id": 6,
-        "type": "choice",
-        "question": "My sisters __________ horror films.",
-        "options": [
-            "does not like",
-            "likes",
-            "likes not",
-            "do not like"
-        ],
-        "answer": "do not like"
-    },
-    {
-        "id": 7,
-        "type": "choice",
-        "question": "We __________ a wonderful holiday last month.",
-        "options": [
-            "have",
-            "had",
-            "has",
-            "having"
-        ],
-        "answer": "had"
-    },
-    {
-        "id": 8,
-        "type": "choice",
-        "question": "Aziz __________ not at the party yesterday.",
-        "options": [
-            "is",
-            "am",
-            "were",
-            "was"
-        ],
-        "answer": "was"
-    },
-    {
-        "id": 9,
-        "type": "choice",
-        "question": "___ a cup of cappuccino? -  Yes, please.",
-        "options": [
-            "Do you like",
-            "Want you",
-            "Would you like",
-            "Are you like"
-        ],
-        "answer": "Would you like"
-    },
-    {
-        "id": 10,
-        "type": "choice",
-        "question": "This movie is __________ than the one we watched last week.",
-        "options": [
-            "interesting",
-            "most interesting",
-            "the most interesting",
-            "more interesting"
-        ],
-        "answer": "more interesting"
-    },
-    {
-        "id": 11,
-        "type": "choice",
-        "question": "Bob: \"What are your plans for the weekend?\" Leyla: \"I'm not sure yet. I think I ____ stay home and relax.\"",
-        "options": [
-            "will",
-            "going to",
-            "am",
-            "does"
-        ],
-        "answer": "will"
-    },
-    {
-        "id": 12,
-        "type": "choice",
-        "question": "Manzura: \"Do you listen to classical music?\" Aybek: \"No, ____ . I hate it\"",
-        "options": [
-            "never",
-            "sometimes",
-            "usually",
-            "seldom"
-        ],
-        "answer": "never"
-    },
-    {
-        "id": 13,
-        "type": "choice",
-        "question": "Is there ____ water in the bottle? I want to drink.",
-        "options": [
-            "some",
-            "a",
-            "any",
-            "the"
-        ],
-        "answer": "any"
-    },
-    {
-        "id": 14,
-        "type": "choice",
-        "question": "Alan’s computer is  ____  the table, next to the TV.",
-        "options": [
-            "beside",
-            "on",
-            "in",
-            "over"
-        ],
-        "answer": "on"
-    },
-    {
-        "id": 15,
-        "type": "choice",
-        "question": "Aynura ____ a lot of vegetables because she wants to stay healthy.",
-        "options": [
-            "eat",
-            "eats",
-            "is eating",
-            "will eat"
-        ],
-        "answer": "eats"
-    },
-    {
-        "id": 16,
-        "type": "choice",
-        "question": "Aziza: \"Have you ever ____ to Korea?\" Dilnoza: \"Yes, I ____ there last year.\"",
-        "options": [
-            "go / went",
-            "went / have gone",
-            "gone / go",
-            "been / went"
-        ],
-        "answer": "been / went"
-    },
-    {
-        "id": 17,
-        "type": "choice",
-        "question": "Jakhangir and Parakhat have been friends ____ childhood and have many fond memories together.",
-        "options": [
-            "since",
-            "for",
-            "during",
-            "from"
-        ],
-        "answer": "since"
-    },
-    {
-        "id": 18,
-        "type": "choice",
-        "question": "You ____ take your umbrella. The weather forecast says it might rain later.",
-        "options": [
-            "can",
-            "will",
-            "must",
-            "should"
-        ],
-        "answer": "should"
-    },
-    {
-        "id": 19,
-        "type": "choice",
-        "question": "He ____ be at work because his car is parked near his house.",
-        "options": [
-            "can’t",
-            "must",
-            "mustn’t",
-            "would"
-        ],
-        "answer": "can’t"
-    },
-    {
-        "id": 20,
-        "type": "choice",
-        "question": "This is the watch ___ my father gave me for my birthday.",
-        "options": [
-            "when",
-            "where",
-            "whose",
-            "which"
-        ],
-        "answer": "which"
-    },
-    {
-        "id": 21,
-        "type": "choice",
-        "question": "If the children ____ their homework by 6 pm, they can go out to play.",
-        "options": [
-            "will finish",
-            "finish",
-            "would finish",
-            "finished"
-        ],
-        "answer": "finish"
-    },
-    {
-        "id": 22,
-        "type": "choice",
-        "question": "I ___ smoke, but now I lead a healthy lifestyle.",
-        "options": [
-            "use to",
-            "using to",
-            "used to",
-            "uses to"
-        ],
-        "answer": "used to"
-    },
-    {
-        "id": 23,
-        "type": "choice",
-        "question": "Yulduz is becoming a ___ dancer with each class she takes.",
-        "options": [
-            "gooder",
-            "better",
-            "best",
-            "more good"
-        ],
-        "answer": "better"
-    },
-    {
-        "id": 24,
-        "type": "choice",
-        "question": "She enjoys ___ sports at the sports club.",
-        "options": [
-            "do",
-            "to do",
-            "doing",
-            "did"
-        ],
-        "answer": "doing"
-    },
-    {
-        "id": 25,
-        "type": "choice",
-        "question": "My parents encouraged me ___ their path and become a doctor.",
-        "options": [
-            "follow",
-            "following",
-            "to follow",
-            "followed"
-        ],
-        "answer": "to follow"
-    },
-    {
-        "id": 26,
-        "type": "choice",
-        "question": "Direct speech: She said, \"I am washing the dishes now.\"",
-        "options": [
-            "She said that she is washing the dishes.",
-            "She said that she was washing the dishes now.",
-            "She said that she is washing the dishes then.",
-            "She said that she was washing the dishes then."
-        ],
-        "answer": "She said that she was washing the dishes then."
-    },
-    {
-        "id": 27,
-        "type": "choice",
-        "question": "Would you mind ___ the window?",
-        "options": [
-            "opening",
-            "to open",
-            "open",
-            "opens"
-        ],
-        "answer": "opening"
-    },
-    {
-        "id": 28,
-        "type": "choice",
-        "question": "A: I am so nervous. I am going on stage now. B: Well, ___ a leg!",
-        "options": [
-            "do",
-            "make",
-            "break",
-            "create"
-        ],
-        "answer": "break"
-    },
-    {
-        "id": 29,
-        "type": "choice",
-        "question": "She likes ______ singing nor dancing.",
-        "options": [
-            "both",
-            "either",
-            "neither",
-            "not only"
-        ],
-        "answer": "neither"
-    },
-    {
-        "id": 30,
-        "type": "choice",
-        "question": "You cannot enter the building ______ you have the ticket.",
-        "options": [
-            "unless",
-            "in case",
-            "otherwise",
-            "so that"
-        ],
-        "answer": "unless"
-    },
-    {
-        "id": 31,
-        "type": "choice",
-        "question": "Islam suggested ______ this terrible job.",
-        "options": [
-            "quit",
-            "to quitting",
-            "to quit",
-            "quitting"
-        ],
-        "answer": "quitting"
-    },
-    {
-        "id": 32,
-        "type": "choice",
-        "question": "If Atabek __________ IELTS, he will apply for this scholarship.",
-        "options": [
-            "gets",
-            "got",
-            "will get",
-            "would get"
-        ],
-        "answer": "gets"
-    },
-    {
-        "id": 33,
-        "type": "choice",
-        "question": "Do you think he ________ pass the test?",
-        "options": [
-            "is going to",
-            "has",
-            "will",
-            "would be"
-        ],
-        "answer": "will"
-    },
-    {
-        "id": 34,
-        "type": "choice",
-        "question": "I remember ______the door. Don’t worry!",
-        "options": [
-            "to lock",
-            "lock",
-            "to locking",
-            "locking"
-        ],
-        "answer": "locking"
-    },
-    {
-        "id": 35,
-        "type": "choice",
-        "question": "The city __________ my mother was born is Nukus.",
-        "options": [
-            "what",
-            "where",
-            "which",
-            "when"
-        ],
-        "answer": "where"
-    },
-    {
-        "id": 36,
-        "type": "choice",
-        "question": "I'm so excited! My sister's just had a baby boy and I've always wanted a ______ .",
-        "options": [
-            "cousin",
-            "granddaughter",
-            "nephew",
-            "son-in-law"
-        ],
-        "answer": "nephew"
-    },
-    {
-        "id": 37,
-        "type": "choice",
-        "question": "How much do I ______ you? – 500k sums. You can give it whenever you want.",
-        "options": [
-            "owe",
-            "lend",
-            "borrow",
-            "news"
-        ],
-        "answer": "owe"
-    },
-    {
-        "id": 38,
-        "type": "choice",
-        "question": "Do you think this sweater ______ with these jeans?",
-        "options": [
-            "fits",
-            "does",
-            "chooses",
-            "matches"
-        ],
-        "answer": "matches"
-    },
-    {
-        "id": 39,
-        "type": "choice",
-        "question": "The computer broke the first time I used it so the store gave me a full ______.",
-        "options": [
-            "receipt",
-            "discount",
-            "refund",
-            "sale"
-        ],
-        "answer": "refund"
-    },
-    {
-        "id": 40,
-        "type": "choice",
-        "question": "Mekhri was ______ by her grandmother.",
-        "options": [
-            "brought up",
-            "grown up",
-            "given up",
-            "risen up"
-        ],
-        "answer": "brought up"
-    },
-    {
-        "id": 41,
-        "type": "choice",
-        "question": "People with no previous ______need not apply.",
-        "options": [
-            "experiment",
-            "experience",
-            "skills",
-            "experienced"
-        ],
-        "answer": "experience"
-    },
-    {
-        "id": 42,
-        "type": "choice",
-        "question": "After the plane ______off, he was able to relax and start to enjoy the flight.",
-        "options": [
-            "went",
-            "took",
-            "flew",
-            "made"
-        ],
-        "answer": "took"
-    },
-    {
-        "id": 43,
-        "type": "choice",
-        "question": "Theft and ______ are still among the most serious crimes in many countries.",
-        "options": [
-            "welfare",
-            "homicide",
-            "sacrifice",
-            "ignorance"
-        ],
-        "answer": "homicide"
-    },
-    {
-        "id": 44,
-        "type": "choice",
-        "question": "His attitude towards us lately is ______, so I think we should talk to him.",
-        "options": [
-            "intolerable",
-            "virtual",
-            "considerable",
-            "inevitable"
-        ],
-        "answer": "intolerable"
-    },
-    {
-        "id": 45,
-        "type": "choice",
-        "question": "Youngsters should never ______ the importance of education in their future career.",
-        "options": [
-            "capture",
-            "calculate",
-            "judge",
-            "underestimate"
-        ],
-        "answer": "underestimate"
-    },
-    {
-        "id": 46,
-        "type": "input",
-        "question": "Helena _______________ when I came home. (to read)",
-        "answer": [
-            "was reading"
-        ]
-    },
-    {
-        "id": 47,
-        "type": "input",
-        "question": "I ________________ in London for five years by January. (to live)",
-        "answer": [
-            "will have been living",
-            "will have lived",
-            "'ll have been living",
-            "'ll have lived"
-        ]
-    },
-    {
-        "id": 48,
-        "type": "input",
-        "question": "Look! The children _____________ outside. (to play)",
-        "answer": [
-            "are playing"
-        ]
-    },
-    {
-        "id": 49,
-        "type": "input",
-        "question": "If she ___________________ harder, she would have passed the test. (to study)",
-        "answer": [
-            "had studied",
-            "'d studied"
-        ]
-    },
-    {
-        "id": 50,
-        "type": "input",
-        "question": "Come on! It is 7 pm. I _____________ for you for an hour.  (to wait)",
-        "answer": [
-            "have been waiting",
-            "have waited",
-            "'ve been waiting",
-            "'ve waited"
-        ]
-    }
+{"id": 1, "type": "choice", "level": "A1", "question": "My brother ____ a teacher.", "options": ["be", "is", "am", "are"], "answer": "is"},
+{"id": 2, "type": "choice", "level": "A1", "question": "She ____ from Uzbekistan.", "options": ["am", "is", "are", "be"], "answer": "is"},
+{"id": 3, "type": "choice", "level": "A1", "question": "I ____ a student.", "options": ["is", "are", "am", "be"], "answer": "am"},
+{"id": 4, "type": "choice", "level": "A1", "question": "They ____ at home now.", "options": ["is", "am", "are", "be"], "answer": "are"},
+{"id": 5, "type": "choice", "level": "A1", "question": "This is ____ apple.", "options": ["a", "an", "the", "some"], "answer": "an"},
+{"id": 6, "type": "choice", "level": "A1", "question": "I have ____ dog.", "options": ["a", "an", "the", "much"], "answer": "a"},
+{"id": 7, "type": "choice", "level": "A1", "question": "Look at ____ bird! It is beautiful.", "options": ["this", "these", "those", "them"], "answer": "this"},
+{"id": 8, "type": "choice", "level": "A1", "question": "____ are my friends.", "options": ["This", "These", "That", "It"], "answer": "These"},
+{"id": 9, "type": "choice", "level": "A1", "question": "We ____ students.", "options": ["is", "am", "are", "be"], "answer": "are"},
+{"id": 10, "type": "choice", "level": "A1", "question": "There ____ a book on the table.", "options": ["is", "are", "am", "be"], "answer": "is"},
+{"id": 11, "type": "choice", "level": "A1", "question": "There ____ three chairs in the room.", "options": ["is", "are", "am", "be"], "answer": "are"},
+{"id": 12, "type": "choice", "level": "A1", "question": "____ you like pizza?", "options": ["Do", "Does", "Is", "Are"], "answer": "Do"},
+{"id": 13, "type": "choice", "level": "A1", "question": "____ she speak English?", "options": ["Do", "Does", "Is", "Has"], "answer": "Does"},
+{"id": 14, "type": "choice", "level": "A1", "question": "He ____ football every Sunday.", "options": ["play", "plays", "playing", "to play"], "answer": "plays"},
+{"id": 15, "type": "choice", "level": "A1", "question": "I ____ coffee in the morning.", "options": ["drink", "drinks", "drinking", "to drink"], "answer": "drink"},
+{"id": 16, "type": "choice", "level": "A1", "question": "____ name is Ali.", "options": ["He", "Him", "His", "He is"], "answer": "His"},
+{"id": 17, "type": "choice", "level": "A1", "question": "This is my sister. ____ is a doctor.", "options": ["He", "She", "It", "They"], "answer": "She"},
+{"id": 18, "type": "choice", "level": "A1", "question": "The cat is ____ the table.", "options": ["in", "on", "at", "of"], "answer": "on"},
+{"id": 19, "type": "choice", "level": "A1", "question": "I get up ____ 7 o'clock.", "options": ["in", "on", "at", "by"], "answer": "at"},
+{"id": 20, "type": "choice", "level": "A1", "question": "We live ____ Tashkent.", "options": ["in", "on", "at", "to"], "answer": "in"},
+{"id": 21, "type": "choice", "level": "A1", "question": "Can you ____ me?", "options": ["help", "helps", "helping", "to help"], "answer": "help"},
+{"id": 22, "type": "choice", "level": "A1", "question": "I ____ swim very well.", "options": ["can", "am", "is", "do"], "answer": "can"},
+{"id": 23, "type": "choice", "level": "A1", "question": "____ is your name?", "options": ["What", "Who", "Where", "When"], "answer": "What"},
+{"id": 24, "type": "choice", "level": "A1", "question": "____ do you live?", "options": ["What", "Who", "Where", "When"], "answer": "Where"},
+{"id": 25, "type": "choice", "level": "A1", "question": "____ old are you?", "options": ["What", "How", "Who", "When"], "answer": "How"},
+{"id": 26, "type": "choice", "level": "A1", "question": "She ____ two brothers.", "options": ["have", "has", "is", "does"], "answer": "has"},
+{"id": 27, "type": "choice", "level": "A1", "question": "I ____ a bicycle.", "options": ["have", "has", "am", "is"], "answer": "have"},
+{"id": 28, "type": "choice", "level": "A1", "question": "These are my ____.", "options": ["book", "books", "book's", "books'"], "answer": "books"},
+{"id": 29, "type": "choice", "level": "A1", "question": "One child, two ____.", "options": ["childs", "children", "childes", "childrens"], "answer": "children"},
+{"id": 30, "type": "choice", "level": "A1", "question": "One man, three ____.", "options": ["mans", "men", "mens", "manes"], "answer": "men"},
+{"id": 31, "type": "choice", "level": "A1", "question": "Is ____ your pen?", "options": ["this", "these", "those", "them"], "answer": "this"},
+{"id": 32, "type": "choice", "level": "A1", "question": "We ____ to music every day.", "options": ["listen", "listens", "listening", "to listen"], "answer": "listen"},
+{"id": 33, "type": "choice", "level": "A1", "question": "She ____ tea every morning.", "options": ["drink", "drinks", "is drink", "drinking"], "answer": "drinks"},
+{"id": 34, "type": "choice", "level": "A1", "question": "____ your father a driver?", "options": ["Is", "Are", "Do", "Does"], "answer": "Is"},
+{"id": 35, "type": "choice", "level": "A1", "question": "____ they students?", "options": ["Is", "Am", "Are", "Do"], "answer": "Are"},
+{"id": 36, "type": "choice", "level": "A1", "question": "I go to school ____ bus.", "options": ["in", "on", "by", "with"], "answer": "by"},
+{"id": 37, "type": "choice", "level": "A1", "question": "Open ____ books, please.", "options": ["you", "your", "yours", "you are"], "answer": "your"},
+{"id": 38, "type": "choice", "level": "A1", "question": "This is ____ car.", "options": ["they", "them", "their", "theirs"], "answer": "their"},
+{"id": 39, "type": "choice", "level": "A1", "question": "My birthday is ____ March.", "options": ["in", "on", "at", "by"], "answer": "in"},
+{"id": 40, "type": "choice", "level": "A1", "question": "We have English lessons ____ Monday.", "options": ["in", "on", "at", "by"], "answer": "on"},
+{"id": 41, "type": "choice", "level": "A2", "question": "Yesterday I ____ to the cinema.", "options": ["go", "went", "gone", "going"], "answer": "went"},
+{"id": 42, "type": "choice", "level": "A2", "question": "She ____ her homework last night.", "options": ["do", "did", "does", "done"], "answer": "did"},
+{"id": 43, "type": "choice", "level": "A2", "question": "They ____ in London in 2019.", "options": ["was", "were", "is", "are"], "answer": "were"},
+{"id": 44, "type": "choice", "level": "A2", "question": "I ____ at school yesterday.", "options": ["was", "were", "am", "is"], "answer": "was"},
+{"id": 45, "type": "choice", "level": "A2", "question": "We ____ TV last weekend.", "options": ["watch", "watched", "watches", "watching"], "answer": "watched"},
+{"id": 46, "type": "choice", "level": "A2", "question": "Did you ____ the film?", "options": ["like", "liked", "likes", "liking"], "answer": "like"},
+{"id": 47, "type": "choice", "level": "A2", "question": "She didn't ____ to school yesterday.", "options": ["go", "went", "goes", "gone"], "answer": "go"},
+{"id": 48, "type": "choice", "level": "A2", "question": "An elephant is ____ than a dog.", "options": ["big", "bigger", "biggest", "more big"], "answer": "bigger"},
+{"id": 49, "type": "choice", "level": "A2", "question": "This test is ____ than the last one.", "options": ["easy", "easier", "easiest", "more easy"], "answer": "easier"},
+{"id": 50, "type": "choice", "level": "A2", "question": "He is the ____ student in the class.", "options": ["good", "better", "best", "goodest"], "answer": "best"},
+{"id": 51, "type": "choice", "level": "A2", "question": "Summer is the ____ season.", "options": ["hot", "hotter", "hottest", "more hot"], "answer": "hottest"},
+{"id": 52, "type": "choice", "level": "A2", "question": "Is there ____ milk in the fridge?", "options": ["some", "any", "a", "an"], "answer": "any"},
+{"id": 53, "type": "choice", "level": "A2", "question": "I have ____ apples in my bag.", "options": ["some", "any", "an", "much"], "answer": "some"},
+{"id": 54, "type": "choice", "level": "A2", "question": "How ____ water do you drink every day?", "options": ["much", "many", "some", "any"], "answer": "much"},
+{"id": 55, "type": "choice", "level": "A2", "question": "How ____ students are there in your class?", "options": ["much", "many", "some", "any"], "answer": "many"},
+{"id": 56, "type": "choice", "level": "A2", "question": "I'm ____ a book now.", "options": ["read", "reads", "reading", "readed"], "answer": "reading"},
+{"id": 57, "type": "choice", "level": "A2", "question": "Look! It ____.", "options": ["rains", "is raining", "rained", "to rain"], "answer": "is raining"},
+{"id": 58, "type": "choice", "level": "A2", "question": "They ____ football at the moment.", "options": ["play", "are playing", "plays", "played"], "answer": "are playing"},
+{"id": 59, "type": "choice", "level": "A2", "question": "Next year I'm ____ to learn English.", "options": ["go", "goes", "going", "gone"], "answer": "going"},
+{"id": 60, "type": "choice", "level": "A2", "question": "I'm going to ____ a doctor.", "options": ["be", "is", "am", "being"], "answer": "be"},
+{"id": 61, "type": "choice", "level": "A2", "question": "You ____ wear a seatbelt. It is the law.", "options": ["can", "must", "might", "may"], "answer": "must"},
+{"id": 62, "type": "choice", "level": "A2", "question": "Students ____ smoke at school.", "options": ["mustn't", "don't have to", "couldn't", "needn't"], "answer": "mustn't"},
+{"id": 63, "type": "choice", "level": "A2", "question": "She sings ____.", "options": ["beautiful", "beautifully", "more beautiful", "beauty"], "answer": "beautifully"},
+{"id": 64, "type": "choice", "level": "A2", "question": "He runs ____.", "options": ["quick", "quickly", "quicker", "quickest"], "answer": "quickly"},
+{"id": 65, "type": "choice", "level": "A2", "question": "I saw ____ at the door.", "options": ["he", "him", "his", "himself"], "answer": "him"},
+{"id": 66, "type": "choice", "level": "A2", "question": "Give ____ the book, please.", "options": ["I", "me", "my", "mine"], "answer": "me"},
+{"id": 67, "type": "choice", "level": "A2", "question": "This book is ____.", "options": ["my", "me", "mine", "myself"], "answer": "mine"},
+{"id": 68, "type": "choice", "level": "A2", "question": "I want ____ English well.", "options": ["speak", "speaks", "to speak", "speaking"], "answer": "to speak"},
+{"id": 69, "type": "choice", "level": "A2", "question": "She enjoys ____ films.", "options": ["watch", "to watch", "watched", "watching"], "answer": "watching"},
+{"id": 70, "type": "choice", "level": "A2", "question": "Would you like ____ tea?", "options": ["some", "any", "many", "much"], "answer": "some"},
+{"id": 71, "type": "choice", "level": "A2", "question": "There isn't ____ sugar left.", "options": ["some", "any", "many", "few"], "answer": "any"},
+{"id": 72, "type": "choice", "level": "A2", "question": "My father ____ a car last year.", "options": ["buy", "bought", "buys", "buying"], "answer": "bought"},
+{"id": 73, "type": "choice", "level": "A2", "question": "We ____ happy yesterday.", "options": ["was", "were", "is", "are"], "answer": "were"},
+{"id": 74, "type": "choice", "level": "A2", "question": "____ you at the party last night?", "options": ["Was", "Were", "Are", "Did"], "answer": "Were"},
+{"id": 75, "type": "choice", "level": "A2", "question": "I could read ____ I was five.", "options": ["when", "because", "if", "so"], "answer": "when"},
+{"id": 76, "type": "choice", "level": "A2", "question": "She ____ speak French when she was young.", "options": ["can", "could", "may", "should"], "answer": "could"},
+{"id": 77, "type": "choice", "level": "A2", "question": "If it rains, we ____ at home.", "options": ["stay", "will stay", "stayed", "would stay"], "answer": "will stay"},
+{"id": 78, "type": "choice", "level": "A2", "question": "I'm taller ____ my brother.", "options": ["then", "than", "as", "of"], "answer": "than"},
+{"id": 79, "type": "choice", "level": "A2", "question": "February is the ____ month.", "options": ["short", "shorter", "shortest", "most short"], "answer": "shortest"},
+{"id": 80, "type": "choice", "level": "A2", "question": "He arrived ____ Monday morning.", "options": ["in", "on", "at", "for"], "answer": "on"},
+{"id": 81, "type": "choice", "level": "B1", "question": "I have never ____ to America.", "options": ["be", "been", "was", "was being"], "answer": "been"},
+{"id": 82, "type": "choice", "level": "B1", "question": "She has just ____ her exam.", "options": ["passed", "pass", "passes", "passing"], "answer": "passed"},
+{"id": 83, "type": "choice", "level": "B1", "question": "Have you ____ been to Samarkand?", "options": ["ever", "never", "yet", "already"], "answer": "ever"},
+{"id": 84, "type": "choice", "level": "B1", "question": "I haven't finished my work ____.", "options": ["already", "yet", "still", "ever"], "answer": "yet"},
+{"id": 85, "type": "choice", "level": "B1", "question": "He has lived here ____ 2015.", "options": ["for", "since", "from", "at"], "answer": "since"},
+{"id": 86, "type": "choice", "level": "B1", "question": "We have known each other ____ ten years.", "options": ["since", "from", "for", "during"], "answer": "for"},
+{"id": 87, "type": "choice", "level": "B1", "question": "While I ____ dinner, the phone rang.", "options": ["cooked", "was cooking", "have cooked", "cook"], "answer": "was cooking"},
+{"id": 88, "type": "choice", "level": "B1", "question": "They ____ TV when I came home.", "options": ["watched", "were watching", "are watching", "have watched"], "answer": "were watching"},
+{"id": 89, "type": "choice", "level": "B1", "question": "If I ____ you, I would apologize.", "options": ["am", "was", "were", "be"], "answer": "were"},
+{"id": 90, "type": "choice", "level": "B1", "question": "If it ____ tomorrow, we'll cancel the trip.", "options": ["rains", "will rain", "rained", "would rain"], "answer": "rains"},
+{"id": 91, "type": "choice", "level": "B1", "question": "If you heat ice, it ____.", "options": ["melts", "will melt", "melted", "would melt"], "answer": "melts"},
+{"id": 92, "type": "choice", "level": "B1", "question": "English ____ in many countries.", "options": ["speaks", "is spoken", "spoken", "is speaking"], "answer": "is spoken"},
+{"id": 93, "type": "choice", "level": "B1", "question": "This bridge ____ in 1932.", "options": ["built", "was built", "is built", "has built"], "answer": "was built"},
+{"id": 94, "type": "choice", "level": "B1", "question": "The man ____ lives next door is a pilot.", "options": ["which", "who", "whose", "whom"], "answer": "who"},
+{"id": 95, "type": "choice", "level": "B1", "question": "The book ____ I read was fascinating.", "options": ["who", "whose", "which", "who's"], "answer": "which"},
+{"id": 96, "type": "choice", "level": "B1", "question": "That's the girl ____ mother is a doctor.", "options": ["who", "which", "whose", "that's"], "answer": "whose"},
+{"id": 97, "type": "choice", "level": "B1", "question": "I'm looking forward to ____ you.", "options": ["meet", "meets", "meeting", "met"], "answer": "meeting"},
+{"id": 98, "type": "choice", "level": "B1", "question": "He decided ____ a new car.", "options": ["buy", "buying", "to buy", "bought"], "answer": "to buy"},
+{"id": 99, "type": "choice", "level": "B1", "question": "She made me ____ my homework.", "options": ["do", "to do", "doing", "did"], "answer": "do"},
+{"id": 100, "type": "choice", "level": "B1", "question": "I used to ____ a lot, but now I don't.", "options": ["traveling", "travel", "traveled", "travels"], "answer": "travel"},
+{"id": 101, "type": "choice", "level": "B1", "question": "There used to ____ a cinema here.", "options": ["be", "been", "being", "was"], "answer": "be"},
+{"id": 102, "type": "choice", "level": "B1", "question": "You ____ see a doctor about that cough.", "options": ["should", "must not", "would", "had"], "answer": "should"},
+{"id": 103, "type": "choice", "level": "B1", "question": "It's late. You ____ go to bed.", "options": ["should", "mustn't", "shouldn't", "hadn't"], "answer": "should"},
+{"id": 104, "type": "choice", "level": "B1", "question": "You ____ pay for the museum — it's free.", "options": ["mustn't", "don't have to", "shouldn't have", "can't"], "answer": "don't have to"},
+{"id": 105, "type": "choice", "level": "B1", "question": "I'm not as tall ____ my father.", "options": ["then", "than", "as", "like"], "answer": "as"},
+{"id": 106, "type": "choice", "level": "B1", "question": "The more you practice, ____ you get.", "options": ["better", "the best", "the better", "best"], "answer": "the better"},
+{"id": 107, "type": "choice", "level": "B1", "question": "Neither answer ____ correct.", "options": ["is", "are", "were", "be"], "answer": "is"},
+{"id": 108, "type": "choice", "level": "B1", "question": "I don't like horror films. — ____ do I.", "options": ["So", "Neither", "Either", "Too"], "answer": "Neither"},
+{"id": 109, "type": "choice", "level": "B1", "question": "It was ____ a good film that we watched it twice.", "options": ["so", "such", "very", "too"], "answer": "such"},
+{"id": 110, "type": "choice", "level": "B1", "question": "The film was ____ boring that I fell asleep.", "options": ["so", "such", "very", "enough"], "answer": "so"},
+{"id": 111, "type": "choice", "level": "B1", "question": "He is old ____ to drive.", "options": ["enough", "too", "still", "yet"], "answer": "enough"},
+{"id": 112, "type": "choice", "level": "B1", "question": "It's ____ cold to swim today.", "options": ["too", "enough", "very much", "such"], "answer": "too"},
+{"id": 113, "type": "choice", "level": "B1", "question": "I have lived here ____ five years.", "options": ["since", "for", "during", "from"], "answer": "for"},
+{"id": 114, "type": "choice", "level": "B1", "question": "I haven't seen him ____ Monday.", "options": ["for", "since", "from", "until"], "answer": "since"},
+{"id": 115, "type": "choice", "level": "B1", "question": "Did you use ____ play chess?", "options": ["to", "used", "using", "for"], "answer": "to"},
+{"id": 116, "type": "choice", "level": "B1", "question": "I'd rather ____ at home tonight.", "options": ["stay", "to stay", "staying", "stayed"], "answer": "stay"},
+{"id": 117, "type": "choice", "level": "B1", "question": "You'd better ____ now.", "options": ["leave", "to leave", "leaving", "left"], "answer": "leave"},
+{"id": 118, "type": "choice", "level": "B1", "question": "How long ____ you known him?", "options": ["did", "have", "do", "are"], "answer": "have"},
+{"id": 119, "type": "choice", "level": "B1", "question": "When ____ you last see him?", "options": ["have", "did", "do", "were"], "answer": "did"},
+{"id": 120, "type": "choice", "level": "B1", "question": "She ____ in London since 2019.", "options": ["lives", "has lived", "lived", "is living"], "answer": "has lived"},
+{"id": 121, "type": "choice", "level": "B1", "question": "The letter ____ yesterday.", "options": ["sent", "was sent", "has sent", "is sending"], "answer": "was sent"},
+{"id": 122, "type": "choice", "level": "B1", "question": "Bread ____ in bakeries.", "options": ["sells", "is sold", "sold", "is selling"], "answer": "is sold"},
+{"id": 123, "type": "choice", "level": "B1", "question": "This time tomorrow we ____ to Bukhara.", "options": ["fly", "will be flying", "flew", "have flown"], "answer": "will be flying"},
+{"id": 124, "type": "choice", "level": "B1", "question": "You're coming to the party, ____?", "options": ["aren't you", "isn't it", "don't you", "won't you"], "answer": "aren't you"},
+{"id": 125, "type": "choice", "level": "B1", "question": "\"I'm late again.\" — He said he ____ late again.", "options": ["is", "was", "will be", "has been"], "answer": "was"},
+{"id": 126, "type": "choice", "level": "B2", "question": "By the time we arrived, the film ____.", "options": ["already started", "had already started", "has already started", "was already starting"], "answer": "had already started"},
+{"id": 127, "type": "choice", "level": "B2", "question": "She ____ her keys before she left the office.", "options": ["lost", "had lost", "has lost", "was losing"], "answer": "had lost"},
+{"id": 128, "type": "choice", "level": "B2", "question": "If I ____ known, I would have helped.", "options": ["had", "have", "would have", "has"], "answer": "had"},
+{"id": 129, "type": "choice", "level": "B2", "question": "If she had studied, she ____ the exam.", "options": ["would pass", "would have passed", "passed", "had passed"], "answer": "would have passed"},
+{"id": 130, "type": "choice", "level": "B2", "question": "I wish I ____ more time.", "options": ["have", "had", "would have", "having"], "answer": "had"},
+{"id": 131, "type": "choice", "level": "B2", "question": "I wish it ____ raining.", "options": ["stops", "stopped", "would stop", "has stopped"], "answer": "would stop"},
+{"id": 132, "type": "choice", "level": "B2", "question": "He suggested ____ a taxi.", "options": ["take", "to take", "taking", "we take"], "answer": "taking"},
+{"id": 133, "type": "choice", "level": "B2", "question": "She denied ____ the money.", "options": ["steal", "to steal", "stealing", "stolen"], "answer": "stealing"},
+{"id": 134, "type": "choice", "level": "B2", "question": "I remember ____ him at the conference.", "options": ["meet", "meeting", "to meet", "met"], "answer": "meeting"},
+{"id": 135, "type": "choice", "level": "B2", "question": "Don't forget ____ the door.", "options": ["locking", "lock", "to lock", "locked"], "answer": "to lock"},
+{"id": 136, "type": "choice", "level": "B2", "question": "He stopped ____ five years ago.", "options": ["smoking", "to smoke", "smoke", "smoked"], "answer": "smoking"},
+{"id": 137, "type": "choice", "level": "B2", "question": "____ the rain, we went for a walk.", "options": ["Despite", "Although", "Because", "Because of"], "answer": "Despite"},
+{"id": 138, "type": "choice", "level": "B2", "question": "____ it was late, she kept working.", "options": ["Despite", "Although", "In spite", "Because of"], "answer": "Although"},
+{"id": 139, "type": "choice", "level": "B2", "question": "A new school ____ being built in our street at the moment.", "options": ["is", "has", "was", "has been"], "answer": "is"},
+{"id": 140, "type": "choice", "level": "B2", "question": "The report ____ by Friday.", "options": ["must finish", "must be finished", "must have finished", "must finishing"], "answer": "must be finished"},
+{"id": 141, "type": "choice", "level": "B2", "question": "The thief ____ by the police last night.", "options": ["caught", "was caught", "has caught", "was catching"], "answer": "was caught"},
+{"id": 142, "type": "choice", "level": "B2", "question": "I had my car ____ last week.", "options": ["repair", "repaired", "to repair", "repairing"], "answer": "repaired"},
+{"id": 143, "type": "choice", "level": "B2", "question": "She had her bag ____ yesterday.", "options": ["steal", "stole", "stolen", "stealing"], "answer": "stolen"},
+{"id": 144, "type": "choice", "level": "B2", "question": "He is used ____ early.", "options": ["to wake up", "to waking up", "wake up", "waking up"], "answer": "to waking up"},
+{"id": 145, "type": "choice", "level": "B2", "question": "I'm not used to ____ in cold weather.", "options": ["drive", "driving", "have driven", "be driven"], "answer": "driving"},
+{"id": 146, "type": "choice", "level": "B2", "question": "Hardly ____ sat down when the phone rang.", "options": ["I had", "had I", "I have", "have I"], "answer": "had I"},
+{"id": 147, "type": "choice", "level": "B2", "question": "No sooner ____ home than it started raining.", "options": ["I got", "did I get", "I had got", "had I got"], "answer": "had I got"},
+{"id": 148, "type": "choice", "level": "B2", "question": "Despite ____ hard, he failed the test.", "options": ["work", "working", "to work", "he work"], "answer": "working"},
+{"id": 149, "type": "choice", "level": "B2", "question": "He apologized for ____ late.", "options": ["be", "being", "to be", "been"], "answer": "being"},
+{"id": 150, "type": "choice", "level": "B2", "question": "She's the woman ____ husband works with me.", "options": ["who", "which", "whose", "whom"], "answer": "whose"},
+{"id": 151, "type": "choice", "level": "B2", "question": "The company, ____ was founded in 1990, has 500 employees.", "options": ["that", "which", "who", "what"], "answer": "which"},
+{"id": 152, "type": "choice", "level": "B2", "question": "I'd rather you ____ smoke in here.", "options": ["don't", "didn't", "won't", "wouldn't"], "answer": "didn't"},
+{"id": 153, "type": "choice", "level": "B2", "question": "It's high time we ____.", "options": ["leave", "left", "to leave", "leaving"], "answer": "left"},
+{"id": 154, "type": "choice", "level": "B2", "question": "If only I ____ more yesterday!", "options": ["studied", "had studied", "have studied", "would study"], "answer": "had studied"},
+{"id": 155, "type": "choice", "level": "B2", "question": "The car needs ____.", "options": ["wash", "to washing", "washing", "washed"], "answer": "washing"},
+{"id": 156, "type": "choice", "level": "B2", "question": "He's getting used ____ on the left.", "options": ["to drive", "to driving", "drive", "driving"], "answer": "to driving"},
+{"id": 157, "type": "choice", "level": "B2", "question": "____ his age, he runs marathons.", "options": ["Despite", "Although", "However", "Because"], "answer": "Despite"},
+{"id": 158, "type": "choice", "level": "B2", "question": "She must ____ tired after the flight.", "options": ["be", "is", "being", "to be"], "answer": "be"},
+{"id": 159, "type": "choice", "level": "B2", "question": "The proposal ____ discussed tomorrow.", "options": ["will be", "will", "is will", "would been"], "answer": "will be"},
+{"id": 160, "type": "choice", "level": "B2", "question": "He said he ____ finished the project.", "options": ["has", "had", "have", "having"], "answer": "had"},
+{"id": 161, "type": "choice", "level": "B2", "question": "She asked where I ____.", "options": ["live", "lived", "do live", "living"], "answer": "lived"},
+{"id": 162, "type": "choice", "level": "B2", "question": "\"Don't touch it.\" — She told me ____ it.", "options": ["don't touch", "not to touch", "to not touch", "not touching"], "answer": "not to touch"},
+{"id": 163, "type": "choice", "level": "B2", "question": "We went out ____ the rain.", "options": ["in spite of", "despite of", "although", "however"], "answer": "in spite of"},
+{"id": 164, "type": "choice", "level": "B2", "question": "I look forward to ____ from you soon.", "options": ["hear", "hearing", "to hear", "heard"], "answer": "hearing"},
+{"id": 165, "type": "choice", "level": "B2", "question": "There's no point ____ about it.", "options": ["to worry", "worrying", "worry", "worried"], "answer": "worrying"},
+{"id": 166, "type": "choice", "level": "B2", "question": "It's worth ____ the museum.", "options": ["visit", "visiting", "to visit", "visited"], "answer": "visiting"},
+{"id": 167, "type": "choice", "level": "B2", "question": "He avoided ____ my question.", "options": ["answer", "answering", "to answer", "answered"], "answer": "answering"},
+{"id": 168, "type": "choice", "level": "B2", "question": "She's famous ____ her novels.", "options": ["for", "about", "of", "in"], "answer": "for"},
+{"id": 169, "type": "choice", "level": "B2", "question": "I'm interested ____ learning Spanish.", "options": ["in", "on", "about", "for"], "answer": "in"},
+{"id": 170, "type": "choice", "level": "B2", "question": "He's good ____ solving problems.", "options": ["in", "at", "on", "for"], "answer": "at"},
+{"id": 171, "type": "choice", "level": "C1", "question": "Rarely ____ such a talented musician.", "options": ["I have met", "have I met", "I met", "had I met"], "answer": "have I met"},
+{"id": 172, "type": "choice", "level": "C1", "question": "Not only ____ late, but he also forgot the documents.", "options": ["he was", "was he", "he is", "is he"], "answer": "was he"},
+{"id": 173, "type": "choice", "level": "C1", "question": "Under no circumstances ____ the door open.", "options": ["you should leave", "should you leave", "you leave", "leave you"], "answer": "should you leave"},
+{"id": 174, "type": "choice", "level": "C1", "question": "Little ____ that the deal had already collapsed.", "options": ["he knew", "did he know", "he did know", "knew he"], "answer": "did he know"},
+{"id": 175, "type": "choice", "level": "C1", "question": "Had I ____ about the problem, I would have called you.", "options": ["known", "know", "knew", "have known"], "answer": "known"},
+{"id": 176, "type": "choice", "level": "C1", "question": "Were the government to act now, the crisis ____.", "options": ["would ease", "will ease", "has eased", "eased"], "answer": "would ease"},
+{"id": 177, "type": "choice", "level": "C1", "question": "It was John ____ broke the window.", "options": ["who", "which", "whom", "whose"], "answer": "who"},
+{"id": 178, "type": "choice", "level": "C1", "question": "What surprises me ____ how quickly he learned.", "options": ["is", "are", "was", "were"], "answer": "is"},
+{"id": 179, "type": "choice", "level": "C1", "question": "Not until midnight ____ the news.", "options": ["we heard", "did we hear", "we did hear", "heard we"], "answer": "did we hear"},
+{"id": 180, "type": "choice", "level": "C1", "question": "So convincing ____ that everyone believed him.", "options": ["his argument was", "was his argument", "his argument", "had his argument"], "answer": "was his argument"},
+{"id": 181, "type": "choice", "level": "C1", "question": "The project, ____ details remain secret, starts in May.", "options": ["which", "whose", "that", "its"], "answer": "whose"},
+{"id": 182, "type": "choice", "level": "C1", "question": "He spoke ____, as if reciting from memory.", "options": ["as", "like", "as if", "so"], "answer": "as if"},
+{"id": 183, "type": "choice", "level": "C1", "question": "____ he had prepared well, he still felt nervous.", "options": ["Despite", "Although", "Because", "However"], "answer": "Although"},
+{"id": 184, "type": "choice", "level": "C1", "question": "She is reputed ____ the best lawyer in town.", "options": ["to be", "being", "be", "that she is"], "answer": "to be"},
+{"id": 185, "type": "choice", "level": "C1", "question": "I'd sooner ____ at home than go out.", "options": ["stay", "to stay", "staying", "stayed"], "answer": "stay"},
+{"id": 186, "type": "choice", "level": "C1", "question": "But for your help, I ____.", "options": ["would fail", "would have failed", "will fail", "had failed"], "answer": "would have failed"},
+{"id": 187, "type": "choice", "level": "C1", "question": "If it ____ for your warning, I'd be in trouble now.", "options": ["wasn't", "isn't", "hadn't been", "hasn't been"], "answer": "hadn't been"},
+{"id": 188, "type": "choice", "level": "C1", "question": "He acts as though he ____ the owner.", "options": ["is", "were", "has been", "would be"], "answer": "were"},
+{"id": 189, "type": "choice", "level": "C1", "question": "It's imperative that he ____ on time.", "options": ["is", "be", "will be", "would be"], "answer": "be"},
+{"id": 190, "type": "choice", "level": "C1", "question": "The manager demanded that the report ____ rewritten.", "options": ["is", "be", "was", "would be"], "answer": "be"},
+{"id": 191, "type": "choice", "level": "C1", "question": "Scarcely ____ the office when the alarm went off.", "options": ["she had left", "had she left", "she left", "left she"], "answer": "had she left"},
+{"id": 192, "type": "choice", "level": "C1", "question": "Never before ____ such dedication.", "options": ["I have seen", "have I seen", "I saw", "did I saw"], "answer": "have I seen"},
+{"id": 193, "type": "choice", "level": "C1", "question": "Only after the meeting ____ the truth.", "options": ["I learned", "did I learn", "I did learn", "learned I"], "answer": "did I learn"},
+{"id": 194, "type": "choice", "level": "C1", "question": "Not since childhood ____ such joy.", "options": ["I had felt", "had I felt", "I felt", "felt I"], "answer": "had I felt"},
+{"id": 195, "type": "choice", "level": "C1", "question": "Should you ____ any questions, contact us anytime.", "options": ["have", "had", "has", "having"], "answer": "have"},
+{"id": 196, "type": "choice", "level": "C1", "question": "The sooner we start, ____.", "options": ["better", "the better", "the best", "best"], "answer": "the better"},
+{"id": 197, "type": "choice", "level": "C1", "question": "Far ____ it from me to criticize your work.", "options": ["be", "is", "was", "being"], "answer": "be"},
+{"id": 198, "type": "choice", "level": "C1", "question": "Seldom ____ such remarkable progress.", "options": ["a student makes", "does a student make", "a student does make", "makes a student"], "answer": "does a student make"},
+{"id": 199, "type": "choice", "level": "C1", "question": "____ the difficulty of the task, she succeeded.", "options": ["Regardless of", "Despite of", "Although", "Even"], "answer": "Regardless of"},
+{"id": 200, "type": "choice", "level": "C1", "question": "It's about time you ____ taking this seriously.", "options": ["start", "started", "to start", "will start"], "answer": "started"},
+{"id": 201, "type": "input", "level": "B1", "question": "Helena _______________ when I came home. (to read)", "answer": ["was reading"]},
+{"id": 202, "type": "input", "level": "B1", "question": "I _______________ my keys. I can't open the door. (to lose)", "answer": ["have lost"]},
+{"id": 203, "type": "input", "level": "B1", "question": "Look at the sky! It _______________ rain. (to go)", "answer": ["is going to"]},
+{"id": 204, "type": "input", "level": "B1", "question": "She _______________ to music when I entered the room. (to listen)", "answer": ["was listening"]},
+{"id": 205, "type": "input", "level": "B1", "question": "They _______________ in Tashkent since 2010. (to live)", "answer": ["have lived", "have been living"]},
+{"id": 206, "type": "input", "level": "B1", "question": "We _______________ this film last week. (to see)", "answer": ["saw"]},
+{"id": 207, "type": "input", "level": "B1", "question": "He _______________ his homework before dinner yesterday. (to finish)", "answer": ["had finished"]},
+{"id": 208, "type": "input", "level": "B1", "question": "While mother _______________, father was reading a newspaper. (to cook)", "answer": ["was cooking"]},
+{"id": 209, "type": "input", "level": "B1", "question": "I _______________ you tomorrow if I have time. (to call)", "answer": ["will call"]},
+{"id": 210, "type": "input", "level": "B1", "question": "The letters _______________ yesterday. (to send)", "answer": ["were sent"]},
+{"id": 211, "type": "input", "level": "B2", "question": "By 2030, scientists _______________ a cure for this disease. (to find)", "answer": ["will have found"]},
+{"id": 212, "type": "input", "level": "B2", "question": "She _______________ for two hours when you finally arrive. (to wait)", "answer": ["will have been waiting", "will have waited"]},
+{"id": 213, "type": "input", "level": "B2", "question": "If he _______________ harder, he would have passed the exam. (to study)", "answer": ["had studied"]},
+{"id": 214, "type": "input", "level": "B2", "question": "I wish I _______________ more free time. (to have)", "answer": ["had"]},
+{"id": 215, "type": "input", "level": "B2", "question": "The house _______________ at the moment. (to renovate)", "answer": ["is being renovated"]},
+{"id": 216, "type": "input", "level": "B2", "question": "He denied _______________ the vase. (to break)", "answer": ["breaking", "having broken"]},
+{"id": 217, "type": "input", "level": "B2", "question": "By the time we reached the station, the train _______________. (to leave)", "answer": ["had left"]},
+{"id": 218, "type": "input", "level": "B2", "question": "She suggested _______________ a taxi instead of walking. (to take)", "answer": ["taking"]},
+{"id": 219, "type": "input", "level": "B2", "question": "I'm not used to _______________ up so early. (to get)", "answer": ["getting"]},
+{"id": 220, "type": "input", "level": "B2", "question": "No sooner had she _______________ the letter than she burst into tears. (to open)", "answer": ["opened"]},
+{"id": 221, "type": "input", "level": "C1", "question": "By next June, I _______________ at this company for ten years. (to work)", "answer": ["will have been working", "will have worked"]},
+{"id": 222, "type": "input", "level": "C1", "question": "He _______________ for the exam all month, so he felt confident. (to prepare)", "answer": ["had been preparing"]},
+{"id": 223, "type": "input", "level": "C1", "question": "If you _______________ earlier, you wouldn't have missed the flight. (to leave)", "answer": ["had left"]},
+{"id": 224, "type": "input", "level": "C1", "question": "She demanded that he _______________ the room at once. (to leave)", "answer": ["leave"]},
+{"id": 225, "type": "input", "level": "C1", "question": "But for the rain, we _______________ the whole day outdoors. (to spend)", "answer": ["would have spent"]},
+{"id": 226, "type": "input", "level": "C1", "question": "She spoke as though she _______________ everything about it. (to know)", "answer": ["knew"]},
+{"id": 227, "type": "input", "level": "C1", "question": "It's high time we _______________. (to leave)", "answer": ["left"]},
+{"id": 228, "type": "input", "level": "C1", "question": "The new bridge _______________ by the end of the year. (to complete)", "answer": ["will have been completed", "will be completed"]},
+{"id": 229, "type": "input", "level": "C1", "question": "Without your support at that moment, I _______________. (to fail)", "answer": ["would have failed"]},
+{"id": 230, "type": "input", "level": "C1", "question": "I wish I _______________ him the truth yesterday. (to tell)", "answer": ["had told"]}
 ]
