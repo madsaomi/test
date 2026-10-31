@@ -1,0 +1,299 @@
+/* ============================================================
+   STANFORD LANGUAGE CENTER — фирменный стиль (brandbook 2021)
+   Палитра: желтый #FFB703 | черный #070707 | белый #FFFFFF
+   Шрифты: Source Serif 4 (аналог Minion Pro) — заголовки,
+           Montserrat (аналог Proxima Nova) — текст
+   ============================================================ */
+:root {
+    --brand-yellow: #FFB703;
+    --brand-yellow-hover: #EDAC00;
+    --brand-black: #070707;
+    --brand-white: #FFFFFF;
+    --primary: #FFB703;
+    --primary-hover: #EDAC00;
+    --bg-color: #FFF9EE;
+    --card-bg: rgba(255, 255, 255, 0.97);
+    --text-main: #070707;
+    --text-muted: #6E6E6E;
+    --btn-text: #070707;
+    --border: #EFE6D2;
+    --border-hover: #DCCEA9;
+    --tint: #FFF6E0;
+    --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Montserrat', 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Декоративный фон: мягкие пятна + фирменные концентрические круги */
+.blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(60px);
+    z-index: -2;
+    opacity: 0.45;
+    animation: drift 20s infinite alternate ease-in-out;
+}
+.blob-1 { width: 50vw; height: 50vw; background: #FFE9B8; top: -10%; left: -10%; }
+.blob-2 { width: 40vw; height: 40vw; background: #FDF0D5; bottom: -10%; right: -10%; animation-delay: -7s; }
+.blob-3 { width: 35vw; height: 35vw; background: #FFE39A; top: 30%; left: 70%; animation-delay: -14s; }
+
+.rings {
+    position: fixed;
+    z-index: -1;
+    border-radius: 50%;
+    pointer-events: none;
+    background: repeating-radial-gradient(circle at center, rgba(255, 183, 3, 0.16) 0 2px, transparent 2px 26px);
+    -webkit-mask-image: radial-gradient(circle, black 40%, transparent 72%);
+    mask-image: radial-gradient(circle, black 40%, transparent 72%);
+}
+.rings-1 { width: 680px; height: 680px; top: -260px; right: -200px; }
+.rings-2 { width: 520px; height: 520px; bottom: -200px; left: -160px; }
+
+@keyframes drift {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    50% { transform: translate(50px, 30px) scale(1.1) rotate(10deg); }
+    100% { transform: translate(-30px, -50px) scale(0.9) rotate(-5deg); }
+}
+
+.container {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    padding: 40px;
+    border-radius: 28px;
+    border: 1px solid rgba(255, 183, 3, 0.18);
+    box-shadow: 0 25px 50px -12px rgba(7, 7, 7, 0.12);
+    width: 100%;
+    max-width: 650px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+
+.logo {
+    width: 112px;
+    border-radius: 26px;
+    margin-bottom: 20px;
+    animation: fadeInDown 0.8s ease-out;
+    box-shadow: 0 8px 22px rgba(255, 183, 3, 0.35);
+}
+
+h1 {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+    color: var(--brand-black);
+}
+p.subtitle { color: var(--text-muted); margin-bottom: 30px; font-size: 15px; line-height: 1.6; }
+
+.btn, button, input { font-family: inherit; }
+
+.btn {
+    background: var(--primary); color: var(--btn-text); border: none; padding: 16px 28px;
+    border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; margin-top: 25px;
+    box-shadow: 0 4px 14px rgba(255, 183, 3, 0.4);
+}
+.btn:hover { background: var(--primary-hover); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255, 183, 3, 0.5); }
+.btn:active { transform: translateY(1px) scale(0.98); box-shadow: 0 2px 8px rgba(255, 183, 3, 0.35); }
+
+.progress-bg { width: 100%; height: 8px; background: #F6EFDD; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.5s ease; border-radius: 4px; }
+
+.screen { display: none; }
+.screen.active { display: block; }
+.swipe-container { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+.header-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.counter { font-weight: 600; color: var(--text-muted); font-size: 15px; }
+
+.circular-timer { position: relative; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; }
+.circular-timer svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+.circular-timer circle { fill: none; stroke-width: 4; stroke-linecap: round; }
+.timer-bg { stroke: #F6EFDD; }
+.timer-path { stroke: var(--primary); stroke-dasharray: 138; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+.timer-text { font-weight: 700; font-size: 16px; color: var(--text-main); position: relative; z-index: 1; }
+
+.urgent .timer-path { stroke: #ef4444; animation: pulseStroke 1s infinite; }
+.urgent .timer-text { color: #ef4444; animation: pulseText 1s infinite; }
+
+h2#question-text { font-size: 20px; font-weight: 600; margin-bottom: 25px; line-height: 1.5; text-align: left; }
+.options { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+
+.option-label {
+    display: flex; align-items: center; padding: 18px; border: 2px solid var(--border); border-radius: 14px;
+    cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-size: 16px; font-weight: 500;
+    background: white; line-height: 1.4;
+}
+.option-label:hover { border-color: var(--border-hover); background: #FFFCF4; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(7, 7, 7, 0.04); }
+.option-label:active { transform: scale(0.98); }
+
+.option-label input[type="radio"] {
+    appearance: none; width: 22px; height: 22px; border: 2px solid var(--border-hover); border-radius: 50%;
+    margin-right: 14px; transition: all 0.2s; position: relative; flex-shrink: 0;
+}
+.option-label input[type="radio"]:checked { border-color: var(--primary); }
+.option-label input[type="radio"]:checked::after {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 12px; height: 12px; background: var(--primary); border-radius: 50%;
+}
+.option-label:has(input[type="radio"]:checked) { border-color: var(--primary); background: var(--tint); box-shadow: 0 4px 15px rgba(255, 183, 3, 0.18); }
+
+.form-group { text-align: left; margin-bottom: 20px; }
+label.field-title { font-weight: 600; font-size: 14px; color: var(--text-main); display: block; margin-bottom: 8px; margin-top: 20px; }
+input[type="text"], input[type="tel"] {
+    width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 12px; box-sizing: border-box;
+    font-size: 16px; transition: all 0.2s; outline: none; background: white;
+}
+input[type="text"]:focus, input[type="tel"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(255, 183, 3, 0.18); }
+
+.phone-wrapper { display: flex; align-items: center; border: 2px solid var(--border); border-radius: 12px; overflow: hidden; transition: all 0.2s; background: white; }
+.phone-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(255, 183, 3, 0.18); }
+.phone-prefix { background: var(--tint); padding: 16px; font-weight: 600; color: var(--text-muted); border-right: 2px solid var(--border); }
+.phone-wrapper input[type="tel"] { border: none; border-radius: 0; margin: 0; padding-left: 12px; box-shadow: none !important; }
+
+.branch-selector { display: flex; gap: 12px; }
+.branch-btn {
+    flex: 1; padding: 16px 10px; border: 2px solid var(--border); border-radius: 12px; text-align: center;
+    cursor: pointer; font-weight: 600; transition: all 0.2s; font-size: 15px; background: white;
+}
+.branch-btn input { display: none; }
+.branch-btn:hover { border-color: var(--border-hover); }
+.branch-btn:active { transform: scale(0.97); }
+.branch-btn:has(input:checked) { border-color: var(--primary); background: var(--tint); color: var(--brand-black); box-shadow: 0 4px 12px rgba(255, 183, 3, 0.22); }
+
+@media (max-width: 600px) {
+    .container { padding: 24px 18px; border-radius: 20px; }
+    h1 { font-size: 23px; }
+    h2#question-text { font-size: 18px; }
+    .option-label { padding: 14px; font-size: 15px; }
+    .btn { padding: 14px 20px; font-size: 15px; }
+}
+
+/* СТИЛЬНЫЙ ТОАСТ (УВЕДОМЛЕНИЕ) */
+.toast-notification {
+    position: fixed;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--brand-black);
+    color: #ffffff;
+    padding: 14px 22px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 500;
+    max-width: calc(100vw - 40px);
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 10px 25px -5px rgba(7, 7, 7, 0.4), 0 0 0 1px rgba(255, 183, 3, 0.25);
+    z-index: 99999;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+.toast-notification.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+.shake {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulseStroke { 0% { stroke-width: 4; } 50% { stroke-width: 7; } 100% { stroke-width: 4; } }
+@keyframes pulseText { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+/* ============ АНТИЧИТ ЭКРАНЫ (фирменный стиль) ============ */
+.cheat-screen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(7, 7, 7, 0.96);
+    z-index: 9999;
+    color: #ffffff;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    padding: 24px;
+    text-align: center;
+}
+.cheat-emoji { font-size: 64px; margin-bottom: 20px; }
+.cheat-title { font-size: 32px; margin-bottom: 18px; }
+.cheat-title.warning { color: var(--brand-yellow); }
+.cheat-title.fail { color: #ef4444; }
+.cheat-text { font-size: 18px; max-width: 420px; line-height: 1.6; }
+.cheat-count { color: var(--brand-yellow); }
+.cheat-btn { width: 280px; margin-top: 28px; }
+
+/* ============ ЭКРАН УСПЕХА (фирменная галочка) ============ */
+.success-icon {
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 18px;
+    background: var(--brand-yellow);
+    border-radius: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 46px;
+    font-weight: 700;
+    color: var(--brand-black);
+    font-family: var(--font-serif);
+    box-shadow: 0 8px 24px rgba(255, 183, 3, 0.45);
+    animation: pulseText 2s infinite;
+}
+
+/* ============ ВЫБРАННЫЕ ВАРИАНТЫ (дубль :has() классами — надежнее) ============ */
+.option-label.selected { border-color: var(--primary); background: var(--tint); box-shadow: 0 4px 15px rgba(255, 183, 3, 0.18); }
+.branch-btn.selected { border-color: var(--primary); background: var(--tint); color: var(--brand-black); box-shadow: 0 4px 12px rgba(255, 183, 3, 0.22); }
+
+/* ============ КНОПКА В ПРОЦЕССЕ ОТПРАВКИ ============ */
+.btn:disabled { opacity: 0.65; transform: none; cursor: wait; box-shadow: none; }
+.btn:disabled:hover { background: var(--primary); transform: none; box-shadow: none; }
+
+/* Текст в полях ввода можно выделять (античит не мешает править свои данные) */
+input, textarea { -webkit-user-select: text; -moz-user-select: text; user-select: text; }
+
+/* Уважение к настройке "уменьшить движение" */
+@media (prefers-reduced-motion: reduce) {
+    .blob, .rings { animation: none; }
+    .success-icon { animation: none; }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
