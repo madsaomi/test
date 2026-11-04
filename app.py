@@ -62,6 +62,27 @@ MIN_TOTAL_SECONDS = 360
 # Минимальный остаток таймера при восстановлении вопроса после перезагрузки
 RESYNC_MIN_SECONDS = 3
 
+# Варианты в анкете: (значение, подпись на кнопке). Форма рисуется из этих списков,
+# а сервер принимает только эти значения — мусор не попадет в бланк и отчеты.
+BRANCHES = [
+    ("Офис", "🏢 Офис"),
+    ("Универ", "🎓 Универ"),
+]
+SOURCES = [
+    ("Instagram", "📸 Instagram"),
+    ("Telegram", "✈️ Telegram"),
+    ("Друзья / Знакомые", "👥 Знакомые"),
+    ("Вывеска / Рядом живу", "📍 Вывеска"),
+    ("Другое", "Другое"),
+]
+BRANCH_VALUES = {v for v, _ in BRANCHES}
+SOURCE_VALUES = {v for v, _ in SOURCES}
+
+
+def redact_token(text):
+    """Убирает токен бота из текста ошибки перед выводом в лог и БД"""
+    text = str(text)
+    return text.replace(BOT_TOKEN, "<BOT_TOKEN>") if BOT_TOKEN else text
 
 def get_chat_ids():
     """Возвращает список всех ID получателей из переменных окружения"""
@@ -121,8 +142,9 @@ def _send_tg_worker(message, result_id=None, photo_bytes=None):
                 if resp.status_code not in (429, 500, 502, 503, 504):
                     break
             except Exception as e:
-                last_error = f"Чат {cid}: {e}"
-                print(f"Ошибка сети при отправке в чат {cid}: {e}")
+                # Текст сетевой ошибки requests содержит URL запроса, а в нем токен бота
+                last_error = f"Чат {cid}: {redact_token(e)}"
+                print(f"Ошибка сети при отправке в чат {cid}: {redact_token(e)}")
 
             if attempt < 2:
                 time.sleep(5 * (attempt + 1))
@@ -341,7 +363,7 @@ def client_question(q):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', branches=BRANCHES, sources=SOURCES)
 
 @app.route('/test/start', methods=['POST'])
 def test_start():
@@ -438,6 +460,7 @@ def api_answer(sid):
     finished = data["current"] > len(data["questions"])
     if finished:
         data["finished"] = True
+        data["finished_at"] = time.time()  # конец теста — без времени на анкету
     else:
         data["shown_at"] = time.time()  # старт отсчета для следующего вопроса
     test_session.save_session(sid, data, finished=finished)
@@ -501,14 +524,17 @@ def submit():
         elif len(clean_p2) == 9:
             phone2 = "+998" + clean_p2
 
+    # Филиал обязателен и только из списка; источник необязателен — чужое значение отбрасываем
+    if raw_branch not in BRANCH_VALUES:
+        return jsonify({"status": "error", "message": "Выберите филиал"}), 400
+
     work_study = raw_work_study[:100] if raw_work_study else None
-    source = raw_source[:50] if raw_source else None
+    source = raw_source if raw_source in SOURCE_VALUES else None
 
     # Сырые значения — для БД и бланка; экранирование HTML делаем только в тексте для Telegram
     fio = raw_fio[:100]
     phone = "+" + clean_digits
     branch = raw_branch[:50]
-    time_spent = str(payload.get('time', 'Не указано')).strip()[:30]
     now = datetime.now().strftime('%d.%m.%Y %H:%M')
 
     # Баллы считаются только из серверной сессии — клиент не присылает ответы
@@ -516,8 +542,11 @@ def submit():
     score = sum(session_data["correct"].values())
     level = calculate_level(score, total)
 
-    # Анализ скорости прохождения (серверные замеры)
-    total_elapsed = now_ts - session_data.get("started_at", now_ts)
+    # Анализ скорости прохождения (серверные замеры). Время клиента не используем:
+    # браузер перезапускает секундомер при перезагрузке, и его можно подделать.
+    # Сессии до этой правки не знают finished_at — считаем до момента отправки.
+    total_elapsed = session_data.get("finished_at", now_ts) - session_data.get("started_at", now_ts)
+    time_spent = f"{int(total_elapsed) // 60} мин {int(total_elapsed) % 60} сек"
     too_fast = session_data.get("too_fast", 0)
     too_slow = session_data.get("too_slow", 0)
     fast_total = total_elapsed < MIN_TOTAL_SECONDS

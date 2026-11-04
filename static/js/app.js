@@ -82,7 +82,6 @@
     let timerInterval;
     let timeLeft;
     let totalTime;
-    let testStartTime;
 
     function initApp() {
         const startQTotal = document.getElementById('start-q-total');
@@ -137,7 +136,6 @@
             document.getElementById('q-total').innerText = totalQuestions;
             // На экране анкеты античит выключен — как и после обычного завершения теста
             isTestActive = !data.finished;
-            testStartTime = Date.now();
             try { warningsCount = parseInt(sessionStorage.getItem('slc_warn'), 10) || 0; } catch (e) {}
 
             document.getElementById('start-screen').classList.remove('active');
@@ -163,7 +161,6 @@
 
     function startTest() {
         isTestActive = true;
-        testStartTime = Date.now();
         swipeScreen('start-screen', 'question-screen');
 
         document.getElementById('question-text').innerText = 'Загрузка...';
@@ -411,17 +408,12 @@
             return;
         }
 
-        const elapsed = Math.round((Date.now() - testStartTime) / 1000);
-        const mins = Math.floor(elapsed / 60);
-        const secs = elapsed % 60;
-        const timeStr = mins + ' мин ' + secs + ' сек';
-
         // Новые поля формы (необязательные)
         const workStudy = document.getElementById('work_study')?.value.trim() || '';
         const phone2Raw = document.getElementById('phone2')?.value.replace(/\D/g, '') || '';
         const sourceInput = document.querySelector('input[name="source"]:checked');
 
-        // Ответы не отправляются: они уже хранятся в серверной сессии
+        // Ответы и время прохождения не отправляются: их хранит и меряет сервер
         const data = {
             sid: sid,
             fio: fio,
@@ -430,7 +422,6 @@
             work_study: workStudy,
             phone2: phone2Raw,
             source: sourceInput ? sourceInput.value : '',
-            time: timeStr,
             hp: (document.getElementById('hp-field')?.value || '')
         };
 
