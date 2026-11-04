@@ -11,182 +11,178 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css?v=7">
-    <style>
-        /* Админка шире и плотнее страницы теста; цвета и шрифты — из style.css */
-        body { display: block; padding: 0; -webkit-user-select: auto; user-select: auto; }
-        .admin { max-width: 1180px; margin: 0 auto; padding: 20px 16px 40px; position: relative; z-index: 10; }
-        .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-        .topbar img { width: 40px; border-radius: 10px; box-shadow: 0 4px 12px rgba(255, 183, 3, 0.3); }
-        .topbar h1 { font-size: 24px; margin: 0; }
-        .topbar .muted { font-size: 13px; color: var(--text-muted); }
-        .topbar form { margin-left: auto; }
-        .btn-ghost { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 9px 14px; font-weight: 600; font-size: 14px; cursor: pointer; color: var(--text-main); text-decoration: none; display: inline-block; }
-        .btn-ghost:hover { border-color: var(--border-hover); background: #FFFCF4; }
-        .btn-small { background: var(--primary); border: none; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer; color: var(--btn-text); }
-        .btn-small:hover { background: var(--primary-hover); }
-        .btn-small:disabled { opacity: 0.6; cursor: wait; }
-
-        .card { background: var(--card-bg); border: 1px solid rgba(255, 183, 3, 0.18); border-radius: 18px; box-shadow: 0 12px 30px -16px rgba(7, 7, 7, 0.18); padding: 18px; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
-        .stat .label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-        .stat .value { font-size: 28px; font-weight: 700; margin-top: 6px; font-variant-numeric: tabular-nums; }
-        .stat .value small { font-size: 14px; color: var(--text-muted); font-weight: 600; }
-        .stat.warn { background: #FEF2F2; border-color: #FECACA; }
-        .stat.warn .value { color: #B91C1C; }
-
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-        .actions h2 { font-size: 15px; margin: 0 0 6px; }
-        .actions p { font-size: 13px; color: var(--text-muted); margin: 0 0 12px; line-height: 1.5; }
-        .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .field { border: 2px solid var(--border); border-radius: 10px; padding: 8px 10px; font-size: 14px; outline: none; background: #fff; -webkit-user-select: text; user-select: text; }
-        .field:focus { border-color: var(--primary); }
-        .note { font-size: 13px; margin-top: 10px; line-height: 1.5; white-space: pre-wrap; }
-        .note.ok { color: #166534; }
-        .note.err { color: #B91C1C; }
-
-        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
-        .toolbar h2 { font-size: 17px; margin: 0 auto 0 0; }
-        .toolbar .field { min-width: 0; }
-        #search { width: 240px; max-width: 100%; }
-
-        .table-wrap { overflow-x: auto; margin: 0 -18px -18px; border-top: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { text-align: left; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; padding: 10px 12px; background: #FFFCF4; white-space: nowrap; }
-        td { padding: 10px 12px; border-top: 1px solid var(--border); white-space: nowrap; vertical-align: middle; }
-        td.name { white-space: normal; min-width: 160px; font-weight: 600; }
-        td.num { font-variant-numeric: tabular-nums; }
-        tr:hover td { background: #FFFCF4; }
-        .score { font-weight: 700; }
-        .pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--tint); }
-        .pill.flag { background: #FEE2E2; color: #991B1B; }
-        .pill.okp { background: #DCFCE7; color: #166534; }
-        .pill.bad { background: #FEE2E2; color: #991B1B; }
-        .pill.wait { background: #FEF3C7; color: #92400E; }
-        a.link { color: var(--text-main); font-weight: 600; }
-        .empty { padding: 28px; text-align: center; color: var(--text-muted); }
-
-        @media (max-width: 700px) {
-            .actions { grid-template-columns: 1fr; }
-            .topbar h1 { font-size: 20px; }
-            .topbar .muted { display: none; }
-            #search { width: 100%; }
-            .stat .value { font-size: 24px; }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/admin.css?v=1">
 </head>
 <body>
-
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
+{% set level_ru = {
+    "Beginner": "начальный", "Elementary": "элементарный", "Pre-Intermediate": "ниже среднего",
+    "Intermediate": "средний", "Upper-Intermediate": "выше среднего", "Upper-Intermediate+": "выше среднего+"
+} %}
+{% macro link(p=period, b=branch, f=flagged) -%}
+/admin?period={{ p }}{% if b %}&branch={{ b|urlencode }}{% endif %}{% if f %}&flagged=1{% endif %}
+{%- endmacro %}
 
 <div class="admin">
-    <div class="topbar">
+    <header class="topbar">
         <img src="/static/logo_app_icon.png" alt="">
-        <div>
-            <h1>Админка</h1>
-            <div class="muted">Ташкент, {{ now }}</div>
+        <div class="topbar-title">
+            <h1>Результаты тестирования</h1>
+            <div class="muted">Stanford LC · Ташкент, {{ now }}</div>
         </div>
-        <form method="post" action="/admin/logout"><button class="btn-ghost" type="submit">Выйти</button></form>
-    </div>
-
-    <div class="stats">
-        <div class="card stat"><div class="label">Сегодня</div><div class="value">{{ stats.today }}</div></div>
-        <div class="card stat"><div class="label">За месяц</div><div class="value">{{ stats.month }}</div></div>
-        <div class="card stat"><div class="label">Средний балл (месяц)</div>
-            <div class="value">{% if stats.month_avg is not none %}{{ "%.1f"|format(stats.month_avg) }}<small> / 50</small>{% else %}—{% endif %}</div></div>
-        <div class="card stat{% if stats.month_flagged %} warn{% endif %}"><div class="label">Подозрительных (месяц)</div><div class="value">{{ stats.month_flagged }}</div></div>
-        <div class="card stat"><div class="label">Всего</div><div class="value">{{ stats.total }}</div></div>
-        <div class="card stat{% if stats.unsent %} warn{% endif %}"><div class="label">Не дошло в Telegram</div><div class="value">{{ stats.unsent }}</div></div>
-    </div>
-
-    <div class="actions">
-        <div class="card">
-            <h2>💾 Резервная копия</h2>
-            <p>Вся база одним файлом (.db.gz). Копия также приходит в Telegram каждый день после 03:00.</p>
-            <a class="btn-small" href="/admin/backup" style="text-decoration: none; display: inline-block;">Скачать сейчас</a>
+        <div class="topbar-actions">
+            <a class="btn-ghost" href="{{ link() }}" title="Загрузить свежие данные">↻ Обновить</a>
+            <form method="post" action="/admin/logout"><button class="btn-ghost" type="submit">Выйти</button></form>
         </div>
-        <div class="card">
-            <h2>📊 Отчет в Telegram</h2>
-            <p>Месяц (ГГГГ-ММ) или год (ГГГГ). Отчет уйдет всем админам.</p>
-            <div class="row">
-                <input class="field" id="period" value="{{ prev_period }}" size="9" aria-label="Период отчета">
-                <button class="btn-small" id="report-btn" type="button" {% if not telegram_ok %}disabled title="Telegram не настроен"{% endif %}>Отправить</button>
+    </header>
+
+    <!-- ФИЛЬТРЫ: все — обычные ссылки, состояние видно в адресе и сохраняется при обновлении -->
+    <nav class="card filters" aria-label="Фильтры">
+        <div class="seg" role="group" aria-label="Период">
+            {% for key, title in periods %}
+            <a href="{{ link(p=key) }}" class="{{ 'on' if key == period }}" {% if key == period %}aria-current="true"{% endif %}>{{ title }}</a>
+            {% endfor %}
+        </div>
+        <div class="chips" role="group" aria-label="Филиал">
+            <a href="{{ link(b='') }}" class="chip {{ 'on' if not branch }}">Все филиалы</a>
+            {% for b in branches %}
+            <a href="{{ link(b=b) }}" class="chip {{ 'on' if b == branch }}">{{ b }}</a>
+            {% endfor %}
+            <a href="{{ link(f=not flagged) }}" class="chip chip-flag {{ 'on' if flagged }}">🚩 Только подозрительные</a>
+        </div>
+    </nav>
+
+    {% if summary.unsent %}
+    <div class="banner warn" role="status">
+        <b>{{ summary.unsent }} {{ 'результат не дошел' if summary.unsent == 1 else 'результатов не дошли' }} в Telegram.</b>
+        Сервер досылает их сам каждые 10 минут — ничего делать не нужно. Они есть в списке ниже.
+    </div>
+    {% endif %}
+
+    <!-- СВОДКА ЗА ВЫБРАННЫЙ ПЕРИОД -->
+    <section class="summary">
+        <div class="card stat">
+            <div class="label">Сдали тест</div>
+            <div class="value">{{ summary.count }}</div>
+            <div class="hint">{{ dict(periods)[period]|lower }}{% if branch %}, {{ branch }}{% endif %}</div>
+        </div>
+        <div class="card stat">
+            <div class="label">Средний балл</div>
+            <div class="value">{% if summary.avg is not none %}{{ "%.1f"|format(summary.avg) }}<small> из 50</small>{% else %}—{% endif %}</div>
+            <div class="hint">чем выше, тем сильнее группа</div>
+        </div>
+        <a class="card stat stat-link {{ 'warn' if summary.flagged }}" href="{{ link(f=True) }}">
+            <div class="label">Подозрительных</div>
+            <div class="value">{{ summary.flagged }}</div>
+            <div class="hint">{{ 'нажмите, чтобы посмотреть' if summary.flagged else 'все прошли честно' }}</div>
+        </a>
+        <div class="card levels">
+            <div class="label">Уровни</div>
+            {% for lv, n in levels %}
+            <div class="lvl">
+                <span class="lvl-name">{{ lv }}<small>{{ level_ru[lv] }}</small></span>
+                <span class="bar"><span style="width: {{ (n / level_top * 100) if level_top else 0 }}%"></span></span>
+                <span class="lvl-n">{{ n }}</span>
             </div>
-            {% if not telegram_ok %}<div class="note err">Telegram не настроен (BOT_TOKEN / CHAT_ID) — отправка недоступна.</div>{% endif %}
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- СПИСОК СДАВШИХ -->
+    <section class="card list">
+        <div class="list-head">
+            <h2>Сдавшие <span class="muted">({{ rows|length }}{% if rows|length >= 300 %}, последние 300{% endif %})</span></h2>
+            <input class="field" id="search" type="search" placeholder="🔍 Имя, телефон или школа" aria-label="Поиск">
+        </div>
+
+        {% if rows %}
+        <div id="rows">
+        {% for r in rows %}
+        <article class="item {{ 'flagged' if r.reasons }}"
+                 data-search="{{ (r.fio ~ ' ' ~ r.phone ~ ' ' ~ (r.phone2 or '') ~ ' ' ~ (r.work_study or ''))|lower }}">
+            <div class="who">
+                <a class="name" href="/admin/result/{{ r.id }}">{{ r.fio }}</a>
+                <div class="meta">{{ r.local }} · {{ r.branch or '—' }}{% if r.work_study %} · {{ r.work_study }}{% endif %}</div>
+            </div>
+            <div class="contact">
+                <a href="tel:{{ r.phone }}" class="tel">📞 {{ r.phone }}</a>
+                {% if r.phone2 %}<a href="tel:{{ r.phone2 }}" class="tel tel2">{{ r.phone2 }} <small>(2-й)</small></a>{% endif %}
+            </div>
+            <div class="result">
+                <span class="score">{{ r.score }}<small>/{{ r.total }}</small></span>
+                <span class="pill" title="{{ level_ru.get(r.level, '') }}">{{ r.level }}</span>
+            </div>
+            <div class="check">
+                {% if r.reasons %}
+                <span class="status bad">🚩 {{ r.reasons[0] }}{% if r.reasons|length > 1 %} <b>и ещё {{ r.reasons|length - 1 }}</b>{% endif %}</span>
+                {% else %}
+                <span class="status good">✓ Прошел честно</span>
+                {% endif %}
+                {% if r.attempts_total > 1 %}<span class="tag">Попытка {{ r.attempt }} из {{ r.attempts_total }}</span>{% endif %}
+                {% if r.telegram_sent != 1 %}<span class="tag tag-bad">не дошло в Telegram</span>{% endif %}
+            </div>
+            <a class="more" href="/admin/result/{{ r.id }}">Подробнее →</a>
+        </article>
+        {% endfor %}
+        </div>
+        <div class="empty" id="no-match" hidden>По запросу никого не нашлось</div>
+        {% else %}
+        <div class="empty">
+            {% if flagged %}Подозрительных за этот период нет 👍{% else %}За этот период тест никто не сдавал.{% endif %}<br>
+            <a href="{{ link(p='all', f=False) }}">Показать за все время</a>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- ИНСТРУМЕНТЫ -->
+    <section class="tools">
+        <div class="card tool">
+            <h3>📥 Выгрузить в Excel</h3>
+            <p>Список с текущими фильтрами: контакты, баллы, уровни, проверка.</p>
+            <a class="btn-small" href="/admin/export.csv?{{ query }}">Скачать таблицу</a>
+        </div>
+        <div class="card tool">
+            <h3>💾 Резервная копия</h3>
+            <p>Вся база одним файлом. Копия и так приходит в Telegram каждый день после 03:00.</p>
+            <a class="btn-small btn-light" href="/admin/backup">Скачать копию</a>
+        </div>
+        <div class="card tool">
+            <h3>📊 Отчет в Telegram</h3>
+            <p>Сводка за месяц (ГГГГ-ММ) или год (ГГГГ) уйдет всем админам.</p>
+            <div class="row">
+                <input class="field" id="period-input" value="{{ prev_period }}" size="8" aria-label="Период отчета">
+                <button class="btn-small btn-light" id="report-btn" type="button" {% if not telegram_ok %}disabled{% endif %}>Отправить</button>
+            </div>
+            {% if not telegram_ok %}<div class="note err">Telegram не настроен — отправка недоступна.</div>{% endif %}
             <div class="note" id="report-note" role="status"></div>
         </div>
-    </div>
-
-    <div class="card">
-        <div class="toolbar">
-            <h2>Результаты</h2>
-            <input class="field" id="search" type="search" placeholder="Поиск: имя, телефон, филиал" aria-label="Поиск по результатам">
-            <select class="field" id="limit" aria-label="Сколько показывать">
-                {% for n in [50, 100, 500] %}<option value="{{ n }}" {% if n == limit %}selected{% endif %}>Последние {{ n }}</option>{% endfor %}
-            </select>
-        </div>
-        <div class="table-wrap">
-            {% if rows %}
-            <table>
-                <thead><tr>
-                    <th>#</th><th>Дата</th><th>ФИО</th><th>Телефон</th><th>Филиал</th>
-                    <th>Балл</th><th>Уровень</th><th>Время</th><th>Флаги</th><th>Telegram</th><th>Бланк</th>
-                </tr></thead>
-                <tbody id="rows">
-                {% for r in rows %}
-                <tr data-search="{{ (r.fio ~ ' ' ~ r.phone ~ ' ' ~ (r.phone2 or '') ~ ' ' ~ (r.branch or '') ~ ' ' ~ (r.work_study or '') ~ ' ' ~ (r.source or ''))|lower }}">
-                    <td class="num">{{ r.id }}</td>
-                    <td class="num">{{ r.local }}</td>
-                    <td class="name">{{ r.fio }}{% if r.work_study %}<div style="font-weight: 400; font-size: 12px; color: var(--text-muted);">{{ r.work_study }}</div>{% endif %}</td>
-                    <td class="num">{{ r.phone }}</td>
-                    <td>{{ r.branch or '—' }}</td>
-                    <td class="num score">{{ r.score }}<span style="color: var(--text-muted); font-weight: 500;">/{{ r.total }}</span></td>
-                    <td><span class="pill">{{ r.level }}</span></td>
-                    <td class="num">{{ r.time_spent or '—' }}</td>
-                    <td>{% if r.flags %}<span class="pill flag">🚩 {{ r.flags }}</span>{% else %}—{% endif %}</td>
-                    <td>{% if r.telegram_sent == 1 %}<span class="pill okp">доставлено</span>{% elif r.telegram_sent == 2 %}<span class="pill wait">досылается</span>{% else %}<span class="pill bad">не дошло</span>{% endif %}</td>
-                    <td><a class="link" href="/admin/sheet/{{ r.id }}" target="_blank" rel="noopener">открыть</a></td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            <div class="empty" id="no-match" hidden>Ничего не найдено</div>
-            {% else %}
-            <div class="empty">Результатов пока нет</div>
-            {% endif %}
-        </div>
-    </div>
+    </section>
 </div>
 
 <script>
-    // Поиск по уже загруженным строкам (без запросов к серверу)
+    // Поиск по загруженному списку (мгновенно, без запроса к серверу)
     const search = document.getElementById('search');
-    if (search) search.addEventListener('input', () => {
+    search.addEventListener('input', () => {
         const q = search.value.trim().toLowerCase();
         let shown = 0;
-        document.querySelectorAll('#rows tr').forEach((tr) => {
-            const hit = !q || tr.dataset.search.includes(q);
-            tr.hidden = !hit;
+        document.querySelectorAll('#rows .item').forEach((el) => {
+            const hit = !q || el.dataset.search.includes(q);
+            el.hidden = !hit;
             if (hit) shown++;
         });
         const none = document.getElementById('no-match');
         if (none) none.hidden = shown > 0;
     });
 
-    document.getElementById('limit').addEventListener('change', (e) => {
-        location.href = '/admin?limit=' + e.target.value;
-    });
-
-    // Отчет: запрос с cookie админки, ответ показываем под кнопкой
     const btn = document.getElementById('report-btn');
     btn.addEventListener('click', async () => {
         const note = document.getElementById('report-note');
-        const period = document.getElementById('period').value.trim();
+        const period = document.getElementById('period-input').value.trim();
+        if (!confirm('Отправить отчет за ' + period + ' всем админам в Telegram?')) return;
         btn.disabled = true; note.className = 'note'; note.textContent = 'Отправляем...';
         try {
             const res = await fetch('/admin/report?period=' + encodeURIComponent(period), { credentials: 'same-origin' });
             const data = await res.json();
-            if (data.sent) { note.className = 'note ok'; note.textContent = 'Отчет отправлен в Telegram.'; }
+            if (data.sent) { note.className = 'note ok'; note.textContent = '✓ Отчет отправлен в Telegram.'; }
             else { note.className = 'note err'; note.textContent = data.message || 'Telegram не принял отчет.'; }
         } catch (e) {
             note.className = 'note err'; note.textContent = 'Нет связи с сервером.';

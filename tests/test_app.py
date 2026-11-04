@@ -381,7 +381,7 @@ class TestAdminPage(BaseCase):
         page = self.client.get("/admin").get_data(as_text=True)
         self.assertIn("&lt;b&gt;Хакер&lt;/b&gt;", page)
         self.assertNotIn("<b>Хакер</b>", page)
-        self.assertIn("12<span", page)
+        self.assertIn("12<small>/50", page)
 
     def test_cookie_grants_api_and_sheet(self):
         sid = self.start()
@@ -410,6 +410,66 @@ class TestAdminPage(BaseCase):
             self.client.get(f"/admin/sheet/{self.results()[0]['id']}")
         self.assertTrue(drawn)
         self.assertNotIn("None", " ".join(drawn))
+
+    def _result(self, phone=PHONE, branch="Офис", correct=10, late=0):
+        sid = self.start()
+        for pos in range(1, 51):
+            q = self.session(sid)["questions"][pos - 1]
+            self.shift_clock(sid, 60 if pos <= late else 5)
+            self.answer(sid, pos, self.correct_answer(q) if pos <= correct else "")
+        self.shift_clock(sid, 20 * 60, key="started_at")  # реалистичные 20 минут, без флага скорости
+        self.submit(sid, phone=phone, branch=branch)
+        return self.results()[-1]["id"]
+
+    def test_filters_by_branch_and_flagged(self):
+        self._result(phone="+998900000001", branch="Офис")
+        self._result(phone="+998900000002", branch="Универ", late=2)
+        self.login()
+        page = lambda q: self.client.get("/admin" + q).get_data(as_text=True)
+        self.assertIn("+998900000002", page("?period=all&branch=Универ"))
+        self.assertNotIn("+998900000001", page("?period=all&branch=Универ"))
+        flagged = page("?period=all&flagged=1")
+        self.assertIn("+998900000002", flagged)
+        self.assertNotIn("+998900000001", flagged)
+        self.assertIn("2 ответа пришли после таймера", flagged)
+
+    def test_attempts_numbered_per_phone(self):
+        self._result()
+        self._result()
+        self.login()
+        self.assertIn("Попытка 2 из 2", self.client.get("/admin?period=all").get_data(as_text=True))
+
+    def test_student_page(self):
+        first = self._result(correct=5)
+        rid = self._result(correct=15, late=1)  # первый верный ответ опоздал — не засчитан
+        self.login()
+        page = self.client.get(f"/admin/result/{rid}").get_data(as_text=True)
+        self.assertIn("14<small> из 50", page)
+        self.assertIn("1 ответ пришел после таймера — не засчитан<", page)
+        self.assertIn(f'href="/admin/result/{first}"', page)  # ссылка на прошлую попытку
+        self.assertIn(f'src="/admin/sheet/{rid}"', page)
+        self.assertEqual(self.client.get("/admin/result/999999").status_code, 404)
+
+    def test_student_page_requires_login(self):
+        rid = self._result()
+        r = self.client.get(f"/admin/result/{rid}")
+        self.assertEqual(r.status_code, 303)
+
+    def test_export_csv_for_excel(self):
+        sid = self.start()
+        self.finish(sid)
+        self.submit(sid, fio="=HYPERLINK(1) Тест")
+        self.login()
+        r = self.client.get("/admin/export.csv?period=all")
+        self.assertEqual(r.status_code, 200)
+        text = r.data.decode("utf-8")
+        self.assertTrue(text.startswith("﻿ID;Дата;ФИО"))
+        self.assertIn(";	=HYPERLINK(1) Тест;", text)   # формула обезврежена
+        self.assertIn(";	+998901234567;", text)        # телефон — текстом, не числом
+
+    def test_plural_forms(self):
+        self.assertEqual([app.plural(n, "ответ", "ответа", "ответов") for n in (1, 2, 5, 11, 21, 22)],
+                         ["ответ", "ответа", "ответов", "ответов", "ответ", "ответа"])
 
     def test_logout_clears_access(self):
         self.login()

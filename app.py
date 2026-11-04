@@ -830,31 +830,136 @@ def _local_dt(created_at):
     return (datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
             .replace(tzinfo=timezone.utc).astimezone(reports.TZ_TASHKENT))
 
+def plural(n, one, few, many):
+    """Русское склонение: 1 ответ, 2 ответа, 5 ответов"""
+    n = abs(int(n))
+    if n % 10 == 1 and n % 100 != 11:
+        return one
+    if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
+        return few
+    return many
+
+def fmt_duration(sec):
+    sec = int(sec or 0)
+    return f"{sec // 60} мин {sec % 60} сек"
+
+def flag_reasons(row):
+    """Флаги проверки простыми словами — что именно подозрительно"""
+    try:
+        t = json.loads(row.get("timing_json") or "{}")
+    except ValueError:
+        t = {}
+    reasons = []
+    late = t.get("too_slow", 0)
+    if late:
+        reasons.append(f"{late} {plural(late, 'ответ пришел', 'ответа пришли', 'ответов пришли')} "
+                       f"после таймера — {plural(late, 'не засчитан', 'не засчитаны', 'не засчитаны')}")
+    fast = t.get("too_fast", 0)
+    if fast:
+        reasons.append(f"{fast} {plural(fast, 'ответ', 'ответа', 'ответов')} быстрее 1–2 секунд — "
+                       f"похоже на подсказку или угадывание")
+    if t.get("fast_total"):
+        reasons.append(f"весь тест за {fmt_duration(t.get('total_sec'))} — подозрительно быстро")
+    if not reasons and row.get("flags"):
+        reasons.append("есть отметки проверки скорости")
+    return reasons
+
+ADMIN_PERIODS = [("today", "Сегодня"), ("week", "7 дней"), ("month", "Этот месяц"), ("all", "Все время")]
+
+def _period_start_utc(key, now):
+    """Начало периода по Ташкенту -> строка UTC для фильтра; None — без ограничения"""
+    day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    start = {"today": day, "week": day - timedelta(days=6), "month": day.replace(day=1)}.get(key)
+    return start.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S") if start else None
+
+def _admin_filters():
+    """Фильтры из адреса: period, branch, flagged (неизвестные значения игнорируются)"""
+    period = request.args.get("period", "month")
+    if period not in dict(ADMIN_PERIODS):
+        period = "month"
+    branch = request.args.get("branch", "")
+    if branch not in BRANCH_VALUES:
+        branch = ""
+    flagged = request.args.get("flagged") == "1"
+    return period, branch, flagged
+
+def _decorate(row):
+    row["local"] = _local_dt(row["created_at"]).strftime('%d.%m.%Y %H:%M')
+    row["reasons"] = flag_reasons(row)
+    return row
+
 @app.route('/admin', methods=['GET'])
 def admin_page():
-    """Страница админки: сводка, таблица результатов, бэкап и отчеты"""
+    """Страница админки: фильтры, сводка за период, список сдавших, инструменты"""
     if not ADMIN_TOKEN:
         return render_template('404.html'), 404
     if not admin_cookie_ok():
         return render_template('admin_login.html', error=None)
 
-    try:
-        limit = max(1, min(int(request.args.get('limit', 100)), 500))
-    except ValueError:
-        limit = 100
-    rows = database.get_recent_results(limit)
-    for r in rows:
-        r["local"] = _local_dt(r["created_at"]).strftime('%d.%m.%Y %H:%M')
-
+    period, branch, flagged = _admin_filters()
     now = datetime.now(reports.TZ_TASHKENT)
-    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    month_start, _ = reports._period_bounds_utc(now.year, now.month)
-    stats = database.get_admin_stats(
-        day_start.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), month_start)
-    prev = _prev_month(now)
-    return render_template('admin.html', rows=rows, stats=stats, limit=limit,
-                           prev_period=prev.strftime('%Y-%m'), now=now.strftime('%d.%m.%Y %H:%M'),
-                           telegram_ok=bool(BOT_TOKEN and get_chat_ids()))
+    start = _period_start_utc(period, now)
+    rows = [_decorate(r) for r in database.query_results(start, branch, flagged, limit=300)]
+    summary = database.period_summary(start, branch)
+    top = max(summary["levels"].values(), default=0)
+    levels = [(lv, summary["levels"].get(lv, 0)) for lv in reports.LEVEL_ORDER]
+    return render_template(
+        'admin.html', rows=rows, summary=summary, levels=levels, level_top=top,
+        periods=ADMIN_PERIODS, period=period, branch=branch, flagged=flagged,
+        branches=[v for v, _ in BRANCHES], now=now.strftime('%d.%m.%Y %H:%M'),
+        prev_period=_prev_month(now).strftime('%Y-%m'), telegram_ok=bool(BOT_TOKEN and get_chat_ids()),
+        query=request.query_string.decode())
+
+@app.route('/admin/result/<int:result_id>')
+def admin_result(result_id):
+    """Карточка студента: контакты, результат, проверка, попытки, бланк"""
+    if not ADMIN_TOKEN:
+        return render_template('404.html'), 404
+    if not admin_cookie_ok():
+        return redirect('/admin', code=303)
+    row = database.get_result_full(result_id)
+    if not row:
+        return render_template('404.html'), 404
+    _decorate(row)
+    timing = json.loads(row.get("timing_json") or "{}")
+    history = [dict(h, local=_local_dt(h["created_at"]).strftime('%d.%m.%Y %H:%M'))
+               for h in database.get_phone_results(row["phone"])]
+    return render_template('admin_result.html', r=row, history=history,
+                           total_time=fmt_duration(timing.get("total_sec")) if timing else row["time_spent"],
+                           late_answers=timing.get("late_answers", {}))
+
+def _csv_cell(value):
+    """Ячейка для Excel: значение, начинающееся с = + - @, Excel выполнит как формулу
+    (в том числе из ФИО, которое ввел студент). Табуляция в начале делает его текстом."""
+    text = "" if value is None else str(value)
+    return "	" + text if text[:1] in ("=", "+", "-", "@") else text
+
+@app.route('/admin/export.csv')
+def admin_export():
+    """Выгрузка результатов (с текущими фильтрами) в CSV для Excel"""
+    import csv
+    denied = admin_denied()
+    if denied:
+        return denied
+    period, branch, flagged = _admin_filters()
+    start = _period_start_utc(period, datetime.now(reports.TZ_TASHKENT))
+    out = io.StringIO()
+    out.write("﻿")  # BOM: Excel сразу понимает UTF-8 (кириллица)
+    w = csv.writer(out, delimiter=";")  # ; — разделитель Excel в русской локали
+    w.writerow(["ID", "Дата", "ФИО", "Телефон", "Телефон 2", "Филиал", "Учеба / работа", "Источник",
+                "Балл", "Из", "Уровень", "Время", "Попытка", "Проверка", "Telegram"])
+    for r in database.query_results(start, branch, flagged, limit=100000):
+        _decorate(r)
+        w.writerow([_csv_cell(v) for v in [
+            r["id"], r["local"], r["fio"], r["phone"], r["phone2"], r["branch"], r["work_study"],
+            r["source"], r["score"], r["total"], r["level"], r["time_spent"], r["attempt"],
+            "; ".join(r["reasons"]) or "в норме",
+            "доставлено" if r["telegram_sent"] == 1 else "не доставлено"]])
+    stamp = datetime.now(reports.TZ_TASHKENT).strftime('%Y-%m-%d')
+    resp = make_response(out.getvalue().encode("utf-8"))
+    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resp.headers["Content-Disposition"] = f'attachment; filename="results-{period}-{stamp}.csv"'
+    return resp
 
 @app.route('/admin/login', methods=['POST'])
 def admin_login():
