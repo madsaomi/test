@@ -59,6 +59,9 @@ SUBMIT_WINDOW = 600
 # Минимальное общее время прохождения, ниже которого результат помечается флагом
 MIN_TOTAL_SECONDS = 360
 
+# Минимальный остаток таймера при восстановлении вопроса после перезагрузки
+RESYNC_MIN_SECONDS = 3
+
 
 def get_chat_ids():
     """Возвращает список всех ID получателей из переменных окружения"""
@@ -376,12 +379,17 @@ def api_question(sid):
     if idx >= len(data["questions"]):
         return jsonify({"status": "success", "finished": True})
 
-    data["shown_at"] = time.time()
-    test_session.save_session(sid, data)
+    # Часы вопроса НЕ перезапускаем: иначе перезагрузка страницы давала бы полный
+    # таймер заново и обнуляла замер для флага "затянутого" ответа.
+    # Клиенту отдаем остаток времени (минимум пара секунд, чтобы успеть отрисовать).
+    q = data["questions"][idx]
+    elapsed = time.time() - data.get("shown_at", time.time())
+    item = client_question(q)
+    item["time_left"] = max(int(q["time"] - elapsed), RESYNC_MIN_SECONDS)
     return jsonify({
         "status": "success",
         "total": len(data["questions"]),
-        "question": client_question(data["questions"][idx])
+        "question": item
     })
 
 @app.route('/api/answer/<sid>', methods=['POST'])
@@ -398,7 +406,8 @@ def api_answer(sid):
         return jsonify({"status": "error", "message": "Тест уже завершен"}), 400
 
     pos = payload.get("pos")
-    if not isinstance(pos, int) or pos != data["current"]:
+    # bool — подкласс int в Python: true в JSON иначе прошел бы как позиция 1
+    if not isinstance(pos, int) or isinstance(pos, bool) or pos != data["current"]:
         return jsonify({"status": "error", "message": "Несинхронизированный вопрос"}), 409
 
     answer = payload.get("answer", "")

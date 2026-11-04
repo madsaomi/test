@@ -26,6 +26,10 @@ def get_db():
 def init_db():
     """Инициализация и миграция таблиц базы данных"""
     with get_db() as conn:
+        # Gunicorn-воркеры стартуют одновременно: без блокировки оба увидят, что
+        # колонки нет, и второй ALTER упадет с 'duplicate column' — воркер не загрузится.
+        # IMMEDIATE заставляет второй воркер дождаться конца миграции первого.
+        conn.execute("BEGIN IMMEDIATE")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS test_results (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

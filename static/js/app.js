@@ -26,10 +26,18 @@
     let warningsCount = 0;
     let warningOverlayActive = false;
 
+    // При перезагрузке страница тоже становится hidden — это не уход со вкладки,
+    // а предупреждения теперь переживают перезагрузку. pagehide приходит раньше.
+    let pageUnloading = false;
+    window.addEventListener('pagehide', () => { pageUnloading = true; });
+    window.addEventListener('pageshow', () => { pageUnloading = false; });
+
     // Используем visibilitychange вместо blur для исключения ложных банов на мобильных устройствах
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden' && isTestActive && !warningOverlayActive) {
+        if (document.visibilityState === 'hidden' && isTestActive && !warningOverlayActive && !pageUnloading) {
             warningsCount++;
+            // Храним вместе с sid: перезагрузка страницы не обнуляет предупреждения
+            try { sessionStorage.setItem('slc_warn', String(warningsCount)); } catch (e) {}
             if (warningsCount >= 3) {
                 // Провал
                 isTestActive = false;
@@ -106,7 +114,10 @@
     }
 
     function clearSid() {
-        try { sessionStorage.removeItem('slc_sid'); } catch (e) {}
+        try {
+            sessionStorage.removeItem('slc_sid');
+            sessionStorage.removeItem('slc_warn');
+        } catch (e) {}
     }
 
     async function tryResume() {
@@ -124,8 +135,10 @@
             sid = saved;
             if (data.total) totalQuestions = data.total;
             document.getElementById('q-total').innerText = totalQuestions;
-            isTestActive = true;
+            // На экране анкеты античит выключен — как и после обычного завершения теста
+            isTestActive = !data.finished;
             testStartTime = Date.now();
+            try { warningsCount = parseInt(sessionStorage.getItem('slc_warn'), 10) || 0; } catch (e) {}
 
             document.getElementById('start-screen').classList.remove('active');
             if (data.finished) {
@@ -196,6 +209,9 @@
     }
 
     function renderQuestion(q) {
+        // Пока в DOM старые варианты, "Следующий" заблокирован — иначе ушел бы
+        // старый выбор под номером нового вопроса
+        isTransitioning = true;
         currentQ = q;
         const questionText = document.getElementById('question-text');
         const container = document.getElementById('answer-container');
@@ -211,7 +227,8 @@
             questionText.innerText = q.question;
             container.innerHTML = '';
 
-            totalTime = q.time_limit; timeLeft = q.time_limit;
+            // После перезагрузки сервер присылает остаток времени (time_left), а не полный таймер
+            totalTime = q.time_limit; timeLeft = q.time_left ?? q.time_limit;
             if (q.type === 'choice') {
                 const optionsDiv = document.createElement('div');
                 optionsDiv.className = 'options';
@@ -237,6 +254,7 @@
 
             updateTimerDisplay();
             startTimer();
+            isTransitioning = false;
         }, 200);
     }
 
@@ -326,19 +344,21 @@
         .then(res => {
             nextBtn.disabled = false;
             if (res.next) {
-                renderQuestion(res.next);
+                renderQuestion(res.next); // снимет isTransitioning после отрисовки
             } else {
+                isTransitioning = false;
                 endTest();
             }
         })
         .catch(() => {
             nextBtn.disabled = false;
+            isTransitioning = false;
             // Сеть подвела: пробуем ресинхронизироваться с сервером
             showToast('Проблема соединения. Восстанавливаем...');
             resyncAfterError();
         });
-
-        setTimeout(() => { isTransitioning = false; }, 350);
+        // isTransitioning снимается только по ответу сервера: Enter в поле ответа
+        // при медленной сети иначе отправлял бы тот же вопрос второй раз (409)
     }
 
     async function resyncAfterError() {
