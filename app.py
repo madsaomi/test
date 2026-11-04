@@ -1,13 +1,14 @@
 import os
 import json
 import html
+import io
 import re
 import time
 import secrets
 import threading
 from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 from werkzeug.middleware.proxy_fix import ProxyFix
 import requests
 
@@ -323,6 +324,79 @@ def _deliver_report(key, year, month):
 def _prev_month(dt):
     return (dt.replace(day=1) - timedelta(days=1)).replace(day=1)
 
+# ================= ЕЖЕДНЕВНЫЙ БЭКАП БАЗЫ =================
+# Раз в сутки (после BACKUP_HOUR по Ташкенту) сжатая копия базы уходит админам
+# в Telegram документом. Если volume на хостинге потеряется — базу можно
+# восстановить из последнего файла: распаковать .gz и положить в DATABASE_PATH.
+BACKUP_ENABLED = os.environ.get("BACKUP_ENABLED", "1").strip() != "0"
+BACKUP_HOUR = int(os.environ.get("BACKUP_HOUR", "3"))
+
+def build_backup():
+    """Сжатый снимок базы: (имя файла, байты .gz, число результатов)"""
+    import gzip, tempfile
+    stamp = datetime.now(reports.TZ_TASHKENT).strftime('%Y-%m-%d')
+    fd, tmp_path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    try:
+        rows = database.backup_snapshot(tmp_path)
+        with open(tmp_path, "rb") as f:
+            data = gzip.compress(f.read(), compresslevel=9)
+    finally:
+        for p in (tmp_path, tmp_path + "-wal", tmp_path + "-shm"):
+            if os.path.exists(p):
+                os.remove(p)
+    return f"stanford-results-{stamp}.db.gz", data, rows
+
+def send_document(filename, data, caption):
+    """Отправляет файл во все чаты админов (до 3 попыток на чат). Возвращает успех."""
+    ok_all = True
+    for cid in get_chat_ids():
+        sent = False
+        for attempt in range(3):
+            try:
+                resp = requests.post(
+                    f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument",
+                    data={"chat_id": cid, "caption": caption, "parse_mode": "HTML"},
+                    files={"document": (filename, data, "application/gzip")},
+                    timeout=60,
+                )
+                if resp.ok:
+                    sent = True
+                    break
+                print(f"Бэкап: чат {cid}: HTTP {resp.status_code} ({resp.text[:100]})")
+                if resp.status_code not in (429, 500, 502, 503, 504):
+                    break
+            except Exception as e:
+                print(f"Бэкап: ошибка сети, чат {cid}: {redact_token(e)}")
+            if attempt < 2:
+                time.sleep(5 * (attempt + 1))
+        ok_all = ok_all and sent
+    return ok_all
+
+def _maybe_send_backup():
+    if not BACKUP_ENABLED:
+        return
+    now = datetime.now(reports.TZ_TASHKENT)
+    if now.hour < BACKUP_HOUR:
+        return
+    key = f"backup-{now.strftime('%Y-%m-%d')}"
+    if not database.claim_report(key, "backup"):
+        return  # сегодня уже отправлен (или отправляет другой воркер)
+    try:
+        if not BOT_TOKEN or not get_chat_ids():
+            raise RuntimeError("Telegram не настроен")
+        filename, data, rows = build_backup()
+        caption = (f"💾 <b>Резервная копия базы</b> — {now.strftime('%d.%m.%Y')}\n"
+                   f"Результатов: {rows} · {len(data) // 1024 + 1} КБ\n"
+                   f"<i>Восстановление: распаковать .gz и положить файл по пути DATABASE_PATH</i>")
+        if not send_document(filename, data, caption):
+            raise RuntimeError("Telegram не принял файл")
+        print(f"Бэкап {key} отправлен ({rows} результатов)")
+    except Exception as e:
+        database.release_report(key)  # повторим в следующем цикле
+        print(f"Бэкап {key} не отправлен: {redact_token(e)} — повторим")
+# ========================================================
+
 def _report_worker():
     time.sleep(10)  # даем приложению и БД подняться
     while True:
@@ -334,9 +408,15 @@ def _report_worker():
             _resend_unsent()
         except Exception as e:
             print(f"Ошибка досылки результатов: {e}")
+        try:
+            _maybe_send_backup()
+        except Exception as e:
+            print(f"Ошибка бэкапа: {e}")
         time.sleep(600)  # проверка каждые 10 минут
 
-threading.Thread(target=_report_worker, daemon=True).start()
+# BACKGROUND_JOBS=0 выключает поток (нужно тестам: они вызывают задачи напрямую)
+if os.environ.get("BACKGROUND_JOBS", "1") != "0":
+    threading.Thread(target=_report_worker, daemon=True).start()
 # ========================================================
 
 def calculate_level(score, total=50):
@@ -699,6 +779,16 @@ def admin_results():
         limit = 100
 
     return jsonify({"status": "success", "results": database.get_recent_results(limit)})
+
+@app.route('/admin/backup')
+def admin_backup():
+    """Скачать сжатую копию базы прямо сейчас. Требует ADMIN_TOKEN."""
+    denied = admin_denied()
+    if denied:
+        return denied
+    filename, data, _rows = build_backup()
+    return send_file(io.BytesIO(data), mimetype="application/gzip",
+                     as_attachment=True, download_name=filename)
 
 @app.route('/admin/report')
 def admin_report():

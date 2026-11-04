@@ -27,3 +27,6 @@ results.db
 Thumbs.db
 *.log
 .zcode/
+
+# Локальные настройки Claude Code
+.claude/

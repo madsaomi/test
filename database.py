@@ -276,6 +276,25 @@ def claim_unsent_results(limit=10, min_age_minutes=15, max_age_days=7,
         """, claimed)
         return [dict(row) for row in cursor.fetchall()]
 
+def backup_snapshot(dest_path):
+    """Согласованная копия базы в dest_path (для бэкапа).
+    VACUUM INTO безопасен при параллельной записи и сжимает файл; временные
+    таблицы (сессии в процессе, счетчики лимитов) из копии удаляются.
+    Возвращает число результатов в копии."""
+    if os.path.exists(dest_path):
+        os.remove(dest_path)
+    with get_db() as conn:
+        conn.execute("VACUUM INTO ?", (dest_path,))
+    copy = sqlite3.connect(dest_path)
+    try:
+        copy.execute("DELETE FROM test_sessions")
+        copy.execute("DELETE FROM rate_hits")
+        copy.commit()
+        copy.execute("VACUUM")
+        return copy.execute("SELECT COUNT(*) FROM test_results").fetchone()[0]
+    finally:
+        copy.close()
+
 def rate_allow(kind, ip, limit, window_sec, record=True):
     """Проверка лимита запросов с IP за окно (общая для всех воркеров).
     True — запрос разрешен (и при record=True сразу засчитан), False — лимит исчерпан."""
