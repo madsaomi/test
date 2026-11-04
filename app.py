@@ -84,6 +84,35 @@ def redact_token(text):
     text = str(text)
     return text.replace(BOT_TOKEN, "<BOT_TOKEN>") if BOT_TOKEN else text
 
+# Заголовки безопасности для всех ответов.
+# 'unsafe-inline' в script-src нужен: страница держится на onclick/oninput в разметке.
+# Остальное CSP все равно ограничивает: скрипты только свои и jsdelivr (конфетти),
+# запросы только к своему серверу, встраивание во фрейм запрещено.
+CSP = "; ".join([
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    "worker-src 'self' blob:",   # canvas-confetti рисует в воркере из blob:
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+])
+
+@app.after_request
+def security_headers(resp):
+    resp.headers.setdefault("Content-Security-Policy", CSP)
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    # Браузеры учитывают HSTS только по HTTPS — по http (локально) он просто игнорируется
+    resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+    resp.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    return resp
+
 def get_chat_ids():
     """Возвращает список всех ID получателей из переменных окружения"""
     if CHAT_ID:
@@ -623,16 +652,33 @@ def submit():
         "level": level
     })
 
+# Подбор админ-токена: не больше ADMIN_FAIL_LIMIT неверных попыток с IP за окно
+ADMIN_FAIL_LIMIT = 10
+ADMIN_FAIL_WINDOW = 900
+
+def admin_denied():
+    """Проверка ADMIN_TOKEN. None — доступ разрешен, иначе готовый ответ с ошибкой."""
+    if not ADMIN_TOKEN:
+        return jsonify({"status": "error", "message": "Не найдено"}), 404
+
+    ip = get_client_ip()
+    if not database.rate_allow("admin_fail", ip, ADMIN_FAIL_LIMIT, ADMIN_FAIL_WINDOW, record=False):
+        return jsonify({"status": "error", "message": "Слишком много попыток. Попробуйте позже."}), 429
+
+    token = request.headers.get('X-Admin-Token', '') or request.args.get('key', '')
+    # Байты, а не str: compare_digest падает с TypeError на не-ASCII строке (было 500)
+    if not secrets.compare_digest(token.encode(), ADMIN_TOKEN.encode()):
+        database.rate_record("admin_fail", ip)
+        return jsonify({"status": "error", "message": "Доступ запрещен"}), 403
+    return None
+
 @app.route('/admin/results')
 def admin_results():
     """Список последних результатов. Доступен только с ADMIN_TOKEN
     (заголовок X-Admin-Token или параметр ?key=). Если токен не задан — 404."""
-    if not ADMIN_TOKEN:
-        return jsonify({"status": "error", "message": "Не найдено"}), 404
-
-    token = request.headers.get('X-Admin-Token', '') or request.args.get('key', '')
-    if not secrets.compare_digest(token, ADMIN_TOKEN):
-        return jsonify({"status": "error", "message": "Доступ запрещен"}), 403
+    denied = admin_denied()
+    if denied:
+        return denied
 
     try:
         limit = max(1, min(int(request.args.get('limit', 100)), 500))
@@ -645,12 +691,9 @@ def admin_results():
 def admin_report():
     """Ручная отправка отчета в Telegram: ?period=2026-10 (месяц) или ?period=2026 (год).
     Без period — за предыдущий месяц. Требует ADMIN_TOKEN."""
-    if not ADMIN_TOKEN:
-        return jsonify({"status": "error", "message": "Не найдено"}), 404
-
-    token = request.headers.get('X-Admin-Token', '') or request.args.get('key', '')
-    if not secrets.compare_digest(token, ADMIN_TOKEN):
-        return jsonify({"status": "error", "message": "Доступ запрещен"}), 403
+    denied = admin_denied()
+    if denied:
+        return denied
 
     period = request.args.get('period', '').strip()
     now = datetime.now(reports.TZ_TASHKENT)
@@ -680,8 +723,14 @@ def admin_report():
 def bad_request(e):
     return jsonify({"status": "error", "message": "Некорректный формат запроса"}), 400
 
+API_PREFIXES = ('/api/', '/test/', '/submit', '/admin/', '/static/')
+
 @app.errorhandler(404)
 def not_found(e):
+    """Человеку в браузере — страница «Не найдено», API и статике — JSON"""
+    wants_html = request.accept_mimetypes.accept_html and not request.path.startswith(API_PREFIXES)
+    if wants_html:
+        return render_template('404.html'), 404
     return jsonify({"status": "error", "message": "Не найдено"}), 404
 
 @app.errorhandler(405)
