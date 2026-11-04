@@ -93,12 +93,12 @@ def redact_token(text):
     return text.replace(BOT_TOKEN, "<BOT_TOKEN>") if BOT_TOKEN else text
 
 # Заголовки безопасности для всех ответов.
-# 'unsafe-inline' в script-src нужен: страница держится на onclick/oninput в разметке.
-# Остальное CSP все равно ограничивает: скрипты только свои и jsdelivr (конфетти),
-# запросы только к своему серверу, встраивание во фрейм запрещено.
+# Скрипты только из файлов сайта и jsdelivr (конфетти); inline-скрипты и onclick=""
+# запрещены — внедренный в страницу код не выполнится. Запросы только к своему
+# серверу, встраивание во фрейм запрещено. Inline-стили (style="") разрешены.
 CSP = "; ".join([
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+    "script-src 'self' https://cdn.jsdelivr.net",   # без 'unsafe-inline': обработчики только в .js
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data:",
@@ -154,6 +154,11 @@ def _send_tg_worker(message, result_id=None, photo_bytes=None):
     all_success = True
     errors = []
 
+    # Для результата шлем только в чаты, где его еще нет (досылка не дублирует)
+    if result_id:
+        delivered = database.get_delivered_chats(result_id)
+        chat_ids = [c for c in chat_ids if c not in delivered]
+
     for cid in chat_ids:
         sent_ok = False
         last_error = None
@@ -183,6 +188,8 @@ def _send_tg_worker(message, result_id=None, photo_bytes=None):
 
                 if resp.ok:
                     sent_ok = True
+                    if result_id:
+                        database.add_delivered_chat(result_id, cid)
                     break
 
                 last_error = f"Чат {cid}: HTTP {resp.status_code} ({resp.text[:100]})"
@@ -219,8 +226,11 @@ def send_to_telegram_sync(message):
     """Синхронная отправка (для отчетов в фоновом потоке). Возвращает успех."""
     return _send_tg_worker(message)
 
-def speed_line(flags, too_fast, too_slow, total_elapsed):
-    """Отметка о скорости прохождения для администратора"""
+def speed_line(flags, too_fast, too_slow, total_elapsed, tab_leaves=0):
+    """Отметка о скорости прохождения (и уходах со вкладки) для администратора"""
+    if tab_leaves:
+        rest = speed_line(flags - tab_leaves, too_fast, too_slow, total_elapsed)
+        return rest + f"\n🚪 <b>Уходил(а) со вкладки:</b> {tab_leaves} {plural(tab_leaves, 'раз', 'раза', 'раз')}"
     if flags:
         return f"🚩 <b>Скорость:</b> подозрительная ({too_fast} сверхбыстрых, {too_slow} после таймера — не засчитаны, {int(total_elapsed)} сек общее)"
     return f"✅ <b>Скорость:</b> в норме ({int(total_elapsed)} сек)"
@@ -289,10 +299,12 @@ def build_result_sheet(r, questions):
 # перезапустился), результат остается с telegram_sent = 0. Фоновый цикл раз в
 # 10 минут пересобирает бланк из снимка вопросов и досылает его.
 
+RESEND_MAX_ATTEMPTS = 10
+
 def _resend_unsent():
     if not BOT_TOKEN or not get_chat_ids():
         return  # без настроек не тратим попытки досылки
-    for row in database.claim_unsent_results():
+    for row in database.claim_unsent_results(max_attempts=RESEND_MAX_ATTEMPTS):
         try:
             timing = json.loads(row["timing_json"] or "{}")
             created = datetime.strptime(row["created_at"], "%Y-%m-%d %H:%M:%S") \
@@ -301,7 +313,8 @@ def _resend_unsent():
             r["date"] = created.strftime('%d.%m.%Y %H:%M')
             r["answers"] = json.loads(row["answers_json"] or "{}")
             speed = speed_line(row["flags"] or 0, timing.get("too_fast", 0),
-                               timing.get("too_slow", 0), timing.get("total_sec", 0))
+                               timing.get("too_slow", 0), timing.get("total_sec", 0),
+                               timing.get("tab_leaves", 0))
             message = build_result_message(r, speed, resent=True)
             # Старые записи без снимка вопросов досылаются текстом
             questions = json.loads(row["questions_json"]) if row["questions_json"] else None
@@ -312,6 +325,19 @@ def _resend_unsent():
             continue
         if _send_tg_worker(message, result_id=row["id"], photo_bytes=photo):
             print(f"Результат #{row['id']} дослан в Telegram")
+        elif (row.get("telegram_attempts") or 0) >= RESEND_MAX_ATTEMPTS:
+            _alert_gave_up(row)
+
+def _alert_gave_up(row):
+    """Досылка сдалась: предупреждаем админов в тех чатах, что работают.
+    Результат не потерян — он в базе и в админке."""
+    missing = [c for c in get_chat_ids() if c not in database.get_delivered_chats(row["id"])]
+    text = (f"⚠️ <b>Результат #{row['id']} не удалось доставить</b> после {RESEND_MAX_ATTEMPTS} попыток\n"
+            f"👤 {html.escape(row['fio'])}, {row['phone']}\n"
+            f"Не дошло в чат(ы): {', '.join(missing) or '—'}. Проверьте, что бот есть в чате и не заблокирован.\n"
+            f"Результат сохранен: админка → /admin/result/{row['id']}")
+    send_to_telegram_sync(text)
+    print(f"Досылка #{row['id']} прекращена, админы предупреждены")
 
 # ================= ПЕРИОДИЧЕСКИЕ ОТЧЕТЫ =================
 # Месячный — 1-го числа за предыдущий месяц (догоняет, даже если сервер был выключен),
@@ -547,6 +573,8 @@ def api_question(sid):
     if not data:
         return jsonify({"status": "error", "message": "Сессия не найдена"}), 404
 
+    if data.get("annulled"):
+        return jsonify({"status": "error", "annulled": True, "message": "Тест аннулирован"}), 400
     idx = data["current"] - 1
     if idx >= len(data["questions"]):
         return jsonify({"status": "success", "finished": True})
@@ -561,8 +589,32 @@ def api_question(sid):
     return jsonify({
         "status": "success",
         "total": len(data["questions"]),
+        "warnings": data.get("tab_leaves", 0),
         "question": item
     })
+
+# Уходы со вкладки раньше считал только браузер: перезагрузка или DevTools их обнуляли,
+# а админ о них не знал. Теперь каждый уход фиксирует сервер; после TAB_LEAVE_LIMIT
+# сессия аннулируется и на сервере — ни ответить, ни отправить результат уже нельзя.
+TAB_LEAVE_LIMIT = 3
+
+@app.route('/api/event/<sid>', methods=['POST'])
+def api_event(sid):
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or payload.get("type") != "tab_leave":
+        return jsonify({"status": "error", "message": "Некорректное событие"}), 400
+    data = test_session.load_session(sid)
+    if not data:
+        return jsonify({"status": "error", "message": "Сессия не найдена"}), 404
+    if data.get("finished") or data.get("annulled"):
+        # Анкета после теста и уже аннулированный тест — не считаем
+        return jsonify({"status": "success", "warnings": data.get("tab_leaves", 0),
+                        "annulled": bool(data.get("annulled"))})
+    data["tab_leaves"] = data.get("tab_leaves", 0) + 1
+    if data["tab_leaves"] >= TAB_LEAVE_LIMIT:
+        data["annulled"] = True
+    test_session.save_session(sid, data)
+    return jsonify({"status": "success", "warnings": data["tab_leaves"], "annulled": bool(data.get("annulled"))})
 
 @app.route('/api/answer/<sid>', methods=['POST'])
 def api_answer(sid):
@@ -574,6 +626,8 @@ def api_answer(sid):
     data = test_session.load_session(sid)
     if not data:
         return jsonify({"status": "error", "message": "Сессия не найдена"}), 404
+    if data.get("annulled"):
+        return jsonify({"status": "error", "message": "Тест аннулирован", "annulled": True}), 400
     if data.get("finished"):
         return jsonify({"status": "error", "message": "Тест уже завершен"}), 400
 
@@ -645,6 +699,8 @@ def submit():
     session_data = test_session.load_session(sid)
     if not session_data:
         return jsonify({"status": "error", "message": "Сессия не найдена. Пройдите тест заново."}), 404
+    if session_data.get('annulled'):
+        return jsonify({"status": "error", "message": "Тест аннулирован: слишком много уходов со вкладки"}), 400
     if not session_data.get('finished'):
         return jsonify({"status": "error", "message": "Тест не завершен"}), 400
 
@@ -708,8 +764,10 @@ def submit():
     too_slow = session_data.get("too_slow", 0)
     fast_total = total_elapsed < MIN_TOTAL_SECONDS
     # Каждый ответ после таймера — флаг: при запасе в несколько секунд случайно так не выйдет
-    flags = too_fast + too_slow + (1 if fast_total else 0)
+    tab_leaves = session_data.get("tab_leaves", 0)
+    flags = too_fast + too_slow + tab_leaves + (1 if fast_total else 0)
     timing_json = json.dumps({
+        "tab_leaves": tab_leaves,
         "total_sec": int(total_elapsed),
         "per_question": session_data.get("seconds", {}),
         "too_fast": too_fast,
@@ -766,7 +824,7 @@ def submit():
         'time_spent': time_spent,
         'answers': session_data["answers"]
     }
-    speed = speed_line(flags, too_fast, too_slow, total_elapsed)
+    speed = speed_line(flags, too_fast, too_slow, total_elapsed, tab_leaves)
     message = build_result_message(res_data, speed)
     photo_bytes = build_result_sheet(res_data, session_data["questions"])
 
@@ -858,6 +916,9 @@ def flag_reasons(row):
     if fast:
         reasons.append(f"{fast} {plural(fast, 'ответ', 'ответа', 'ответов')} быстрее 1–2 секунд — "
                        f"похоже на подсказку или угадывание")
+    leaves = t.get("tab_leaves", 0)
+    if leaves:
+        reasons.append(f"уходил(а) со вкладки с тестом {leaves} {plural(leaves, 'раз', 'раза', 'раз')}")
     if t.get("fast_total"):
         reasons.append(f"весь тест за {fmt_duration(t.get('total_sec'))} — подозрительно быстро")
     if not reasons and row.get("flags"):

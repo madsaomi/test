@@ -267,6 +267,82 @@ class TestTelegram(BaseCase):
         self.assertEqual(sleeps, [8])
 
 
+    def test_multi_chat_resend_skips_delivered_chats(self):
+        fail_222 = {"on": True}
+        def post(url, **kw):
+            chat = (kw.get("data") or kw.get("json"))["chat_id"]
+            self.sent.append((url.rsplit("/", 1)[1], chat))
+            return FakeResp(not (chat == "222" and fail_222["on"]), 200 if chat != "222" or not fail_222["on"] else 500)
+        with mock.patch.object(app, "CHAT_ID", "111,222"), mock.patch.object(app.requests, "post", side_effect=post):
+            sid = self.start()
+            self.finish(sid)
+            self.submit(sid)
+            self.assertEqual(self.results()[0]["telegram_sent"], 0)  # в 222 не дошло
+            with database.get_db() as conn:
+                conn.execute("UPDATE test_results SET created_at = datetime('now', '-20 minutes')")
+            fail_222["on"] = False
+            self.sent.clear()
+            app._resend_unsent()
+        self.assertEqual([chat for _, chat in self.sent], ["222"])  # в 111 повторно не шлем
+        self.assertEqual(self.results()[0]["telegram_sent"], 1)
+
+    def test_alert_when_resend_gives_up(self):
+        self.tg_ok = False
+        sid = self.start()
+        self.finish(sid)
+        self.submit(sid)
+        with database.get_db() as conn:
+            conn.execute("UPDATE test_results SET created_at = datetime('now', '-20 minutes'), "
+                         "telegram_attempts = ?", (app.RESEND_MAX_ATTEMPTS - 1,))
+        self.sent.clear()
+        app._resend_unsent()  # последняя попытка
+        texts = [kw["json"]["text"] for kind, kw in self.sent if kind == "sendMessage"]
+        self.assertTrue(any("не удалось доставить" in t for t in texts), texts)
+        self.sent.clear()
+        app._resend_unsent()  # больше не пытается и не спамит
+        self.assertEqual(self.sent, [])
+
+
+class TestTabLeaves(BaseCase):
+    def leave(self, sid):
+        return self.client.post(f"/api/event/{sid}", json={"type": "tab_leave"}).get_json()
+
+    def test_leaves_counted_and_reported(self):
+        sid = self.start()
+        self.assertEqual(self.leave(sid)["warnings"], 1)
+        self.assertEqual(self.leave(sid)["warnings"], 2)
+        self.assertEqual(self.client.get(f"/api/question/{sid}").get_json()["warnings"], 2)
+        self.finish(sid)
+        self.shift_clock(sid, 20 * 60, key="started_at")
+        self.submit(sid)
+        row = self.results()[0]
+        self.assertEqual(row["flags"], 2)
+        self.assertIn("Уходил(а) со вкладки:</b> 2 раза", self.sent[-1][1]["data"]["caption"])
+        self.assertIn("уходил(а) со вкладки с тестом 2 раза", app.flag_reasons(row))
+
+    def test_third_leave_annuls_on_server(self):
+        sid = self.start()
+        for _ in range(3):
+            res = self.leave(sid)
+        self.assertTrue(res["annulled"])
+        self.assertEqual(self.answer(sid, 1, "x").status_code, 400)
+        self.assertTrue(self.client.get(f"/api/question/{sid}").get_json()["annulled"])
+        d = self.session(sid)
+        d["finished"] = True
+        test_session.save_session(sid, d, finished=True)
+        self.assertEqual(self.submit(sid).status_code, 400)  # и отправить нельзя
+
+    def test_leave_after_test_not_counted(self):
+        sid = self.start()
+        self.finish(sid)
+        self.assertEqual(self.leave(sid)["warnings"], 0)
+
+    def test_bad_event_rejected(self):
+        sid = self.start()
+        self.assertEqual(self.client.post(f"/api/event/{sid}", json={"type": "x"}).status_code, 400)
+        self.assertEqual(self.client.post("/api/event/nope", json={"type": "tab_leave"}).status_code, 404)
+
+
 class TestLimits(BaseCase):
     def test_start_limit_uses_real_ip_not_spoofed(self):
         for i in range(app.SESSION_START_LIMIT):
@@ -297,6 +373,17 @@ class TestHttp(BaseCase):
         self.assertIn("frame-ancestors 'none'", h["Content-Security-Policy"])
         self.assertEqual(h["X-Frame-Options"], "DENY")
         self.assertEqual(h["X-Content-Type-Options"], "nosniff")
+
+    def test_strict_script_csp_and_no_inline_handlers(self):
+        import re
+        csp = self.client.get("/").headers["Content-Security-Policy"]
+        script_src = next(p for p in csp.split("; ") if p.startswith("script-src"))
+        self.assertNotIn("unsafe-inline", script_src)
+        for page in ("index.html", "admin.html", "admin_login.html", "admin_result.html", "404.html"):
+            with open(os.path.join(os.path.dirname(__file__), "..", "templates", page), encoding="utf-8") as f:
+                html = f.read()
+            self.assertIsNone(re.search(r"\son[a-z]+=", html), f"inline-обработчик в {page}")
+            self.assertIsNone(re.search(r"<script>", html), f"inline <script> в {page}")
 
     def test_form_rendered_from_option_lists(self):
         page = self.client.get("/").get_data(as_text=True)

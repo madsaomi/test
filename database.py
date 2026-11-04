@@ -74,6 +74,10 @@ def init_db():
             conn.execute("ALTER TABLE test_results ADD COLUMN telegram_attempts INTEGER DEFAULT 0")
         if "telegram_claimed_at" not in cols:
             conn.execute("ALTER TABLE test_results ADD COLUMN telegram_claimed_at TIMESTAMP")
+        # Чаты, куда результат уже доставлен (через запятую): досылка не дублирует
+        # сообщение в чатах, где оно уже есть, если админских чатов несколько
+        if "telegram_delivered" not in cols:
+            conn.execute("ALTER TABLE test_results ADD COLUMN telegram_delivered TEXT")
 
         # Анти-спам: отметки запросов по IP (общие для всех gunicorn-воркеров)
         conn.execute("""
@@ -271,12 +275,29 @@ def claim_unsent_results(limit=10, min_age_minutes=15, max_age_days=7,
         marks = ",".join("?" * len(claimed))
         cursor.execute(f"""
             SELECT id, created_at, fio, phone, branch, score, total, level, time_spent,
-                   answers_json, questions_json, work_study, phone2, source, flags, timing_json
+                   answers_json, questions_json, work_study, phone2, source, flags, timing_json,
+                   telegram_attempts
             FROM test_results
             WHERE id IN ({marks})
             ORDER BY id ASC
         """, claimed)
         return [dict(row) for row in cursor.fetchall()]
+
+def get_delivered_chats(result_id):
+    """Чаты, куда результат уже доставлен"""
+    with get_db() as conn:
+        row = conn.execute("SELECT telegram_delivered FROM test_results WHERE id = ?", (result_id,)).fetchone()
+        return {c for c in ((row[0] if row else "") or "").split(",") if c}
+
+def add_delivered_chat(result_id, chat_id):
+    """Отмечает доставку в чат сразу после отправки (сбой посередине не вызовет дубль)"""
+    with get_db() as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute("SELECT telegram_delivered FROM test_results WHERE id = ?", (result_id,)).fetchone()
+        chats = {c for c in ((row[0] if row else "") or "").split(",") if c}
+        chats.add(str(chat_id))
+        conn.execute("UPDATE test_results SET telegram_delivered = ? WHERE id = ?",
+                     (",".join(sorted(chats)), result_id))
 
 def get_result(result_id):
     """Одна запись результата со всем нужным для бланка, или None"""

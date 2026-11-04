@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css?v=7">
-    <link rel="stylesheet" href="/static/css/admin.css?v=1">
+    <link rel="stylesheet" href="/static/css/admin.css?v=2">
 </head>
 <body>
 {% set level_ru = {
@@ -158,37 +158,6 @@
     </section>
 </div>
 
-<script>
-    // Поиск по загруженному списку (мгновенно, без запроса к серверу)
-    const search = document.getElementById('search');
-    search.addEventListener('input', () => {
-        const q = search.value.trim().toLowerCase();
-        let shown = 0;
-        document.querySelectorAll('#rows .item').forEach((el) => {
-            const hit = !q || el.dataset.search.includes(q);
-            el.hidden = !hit;
-            if (hit) shown++;
-        });
-        const none = document.getElementById('no-match');
-        if (none) none.hidden = shown > 0;
-    });
-
-    const btn = document.getElementById('report-btn');
-    btn.addEventListener('click', async () => {
-        const note = document.getElementById('report-note');
-        const period = document.getElementById('period-input').value.trim();
-        if (!confirm('Отправить отчет за ' + period + ' всем админам в Telegram?')) return;
-        btn.disabled = true; note.className = 'note'; note.textContent = 'Отправляем...';
-        try {
-            const res = await fetch('/admin/report?period=' + encodeURIComponent(period), { credentials: 'same-origin' });
-            const data = await res.json();
-            if (data.sent) { note.className = 'note ok'; note.textContent = '✓ Отчет отправлен в Telegram.'; }
-            else { note.className = 'note err'; note.textContent = data.message || 'Telegram не принял отчет.'; }
-        } catch (e) {
-            note.className = 'note err'; note.textContent = 'Нет связи с сервером.';
-        }
-        btn.disabled = false;
-    });
-</script>
+<script src="/static/js/admin.js?v=1"></script>
 </body>
 </html>

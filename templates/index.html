@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="/static/css/style.css?v=7">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
-<body oncontextmenu="return false" oncopy="return false" oncut="return false" onpaste="return false">
+<body>
 
 <!-- ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ -->
 <div id="custom-toast" class="toast-notification" role="status" aria-live="polite">
@@ -35,7 +35,7 @@
     <div class="cheat-emoji" aria-hidden="true">⚠️</div>
     <h1 id="warning-title" class="cheat-title warning">Внимание!</h1>
     <p class="cheat-text">Вы покинули вкладку с тестом. Это строго запрещено и расценивается как попытка списывания.<br><br>Предупреждение: <b class="cheat-count"><span id="warning-count">1</span> из 3</b></p>
-    <button class="btn cheat-btn" onclick="closeWarning()">Я понял, вернуться к тесту</button>
+    <button class="btn cheat-btn" id="warning-ok" type="button">Я понял, вернуться к тесту</button>
 </div>
 
 <div id="cheat-fail-screen" class="cheat-screen" role="dialog" aria-modal="true" aria-labelledby="fail-title">
@@ -60,7 +60,7 @@
             <li><span>🔄</span><span>Если страница случайно перезагрузится — тест продолжится с того же места</span></li>
             <li class="rule-warn"><span>⚠️</span><span>Не уходите со вкладки: после 3 раз тест аннулируется. Списывание и скриншоты запрещены</span></li>
         </ul>
-        <button class="btn" onclick="startTest()">Начать тест</button>
+        <button class="btn" id="start-btn" type="button">Начать тест</button>
     </div>
 
     <!-- ЭКРАН ВОПРОСА -->
@@ -79,7 +79,7 @@
         </div>
         <h2 id="question-text">Текст вопроса</h2>
         <div id="answer-container"></div>
-        <button id="next-btn" class="btn" onclick="nextQuestion()">Следующий</button>
+        <button id="next-btn" class="btn" type="button">Следующий</button>
     </div>
 
     <!-- ЭКРАН ФОРМЫ (РЕЗУЛЬТАТЫ) -->
@@ -89,12 +89,12 @@
         
         <div class="form-group">
             <label class="field-title" for="fio">Фамилия и Имя <span class="req-star">*</span></label>
-            <input type="text" id="fio" placeholder="Например: Алишер Рустамов" required autocomplete="off" onkeydown="if(event.key==='Enter') document.getElementById('phone').focus();">
+            <input type="text" id="fio" placeholder="Например: Алишер Рустамов" required autocomplete="off">
             
             <label class="field-title" for="phone">Основной номер телефона <span class="req-star">*</span></label>
             <div class="phone-wrapper">
                 <span class="phone-prefix">+998</span>
-                <input type="tel" id="phone" placeholder="90 123 45 67" maxlength="12" inputmode="numeric" oninput="formatPhoneInput(this)" onkeydown="if(event.key==='Enter') this.blur();" required autocomplete="off">
+                <input type="tel" id="phone" placeholder="90 123 45 67" maxlength="12" inputmode="numeric" required autocomplete="off">
             </div>
 
             <label class="field-title">Выберите филиал <span class="req-star">*</span></label>
@@ -112,12 +112,12 @@
                 <p class="optional-title">Дополнительно — по желанию</p>
 
                 <label class="field-title" for="work_study">Место учебы / работы</label>
-                <input type="text" id="work_study" placeholder="Школа №17, ТГЭУ…" autocomplete="off" onkeydown="if(event.key==='Enter') document.getElementById('phone2').focus();">
+                <input type="text" id="work_study" placeholder="Школа №17, ТГЭУ…" autocomplete="off">
 
                 <label class="field-title" for="phone2">Второй номер <span class="opt-label">(родители / запасной)</span></label>
                 <div class="phone-wrapper">
                     <span class="phone-prefix">+998</span>
-                    <input type="tel" id="phone2" placeholder="93 987 65 43" maxlength="12" inputmode="numeric" oninput="formatPhoneInput(this)" onkeydown="if(event.key==='Enter') this.blur();" autocomplete="off">
+                    <input type="tel" id="phone2" placeholder="93 987 65 43" maxlength="12" inputmode="numeric" autocomplete="off">
                 </div>
 
                 <label class="field-title">Откуда вы узнали о Stanford LC?</label>
@@ -136,7 +136,7 @@
         <input type="text" id="hp-field" name="website" value="" tabindex="-1" autocomplete="off"
                style="position:absolute; left:-9999px; top:-9999px; height:0; width:0; opacity:0;">
 
-        <button class="btn" onclick="submitResults()">Отправить результаты</button>
+        <button class="btn" id="submit-btn" type="button">Отправить результаты</button>
     </div>
 
     <!-- ЭКРАН УСПЕХА -->
@@ -151,7 +151,7 @@
 </div>
 
 <!-- СКРИПТЫ -->
-<script src="/static/js/app.js?v=7"></script>
+<script src="/static/js/app.js?v=9"></script>
 
 </body>
 </html>

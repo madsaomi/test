@@ -38,12 +38,9 @@
             warningsCount++;
             // Храним вместе с sid: перезагрузка страницы не обнуляет предупреждения
             try { sessionStorage.setItem('slc_warn', String(warningsCount)); } catch (e) {}
+            reportTabLeave();
             if (warningsCount >= 3) {
-                // Провал
-                isTestActive = false;
-                clearInterval(timerInterval);
-                clearSid();
-                document.getElementById('cheat-fail-screen').style.display = 'flex';
+                showCheatFail();
             } else {
                 // Предупреждение
                 warningOverlayActive = true;
@@ -52,6 +49,34 @@
             }
         }
     });
+
+    // Сервер считает уходы сам: админ видит их в результате, а после 3-го
+    // сессия аннулируется и на сервере (обнулить счетчик в браузере бесполезно).
+    // keepalive — запрос долетит, даже если вкладку сейчас сворачивают.
+    let pendingLeaves = 0;
+    function reportTabLeave() {
+        // Ушел со вкладки сразу после «Начать тест», пока сервер еще не выдал sid —
+        // запоминаем и отправим, как только сессия появится
+        if (!sid) { pendingLeaves++; return; }
+        fetch('/api/event/' + sid, {
+            method: 'POST', keepalive: true,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'tab_leave' })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.annulled && isTestActive) showCheatFail();
+        })
+        .catch(() => {});
+    }
+
+    function showCheatFail() {
+        isTestActive = false;
+        clearInterval(timerInterval);
+        clearSid();
+        document.getElementById('warning-screen').style.display = 'none';
+        document.getElementById('cheat-fail-screen').style.display = 'flex';
+    }
 
     function closeWarning() {
         warningOverlayActive = false;
@@ -103,7 +128,26 @@
             });
         });
 
+        bindUi();
         tryResume();
+    }
+
+    // Все обработчики — здесь, а не атрибутами в HTML: CSP запрещает inline-скрипты
+    function bindUi() {
+        const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+        const enterTo = (id, action) => on(id, 'keydown', (e) => { if (e.key === 'Enter') action(e.target); });
+
+        ['contextmenu', 'copy', 'cut', 'paste'].forEach((ev) => document.body.addEventListener(ev, (e) => e.preventDefault()));
+        on('warning-ok', 'click', closeWarning);
+        on('start-btn', 'click', startTest);
+        on('next-btn', 'click', () => nextQuestion()); // без аргумента: иначе event сочтется за «время вышло»
+        on('submit-btn', 'click', submitResults);
+
+        enterTo('fio', () => document.getElementById('phone').focus());
+        enterTo('phone', (el) => el.blur());
+        enterTo('work_study', () => document.getElementById('phone2').focus());
+        enterTo('phone2', (el) => el.blur());
+        ['phone', 'phone2'].forEach((id) => on(id, 'input', (e) => formatPhoneInput(e.target)));
     }
 
     // Случайная перезагрузка (свайп на мобильном) не убивает тест:
@@ -127,6 +171,7 @@
         try {
             const res = await fetch('/api/question/' + saved);
             const data = await res.json();
+            if (data.annulled) { sid = saved; showCheatFail(); return; }
             if (data.status !== 'success') {
                 clearSid();
                 return;
@@ -137,6 +182,7 @@
             // На экране анкеты античит выключен — как и после обычного завершения теста
             isTestActive = !data.finished;
             try { warningsCount = parseInt(sessionStorage.getItem('slc_warn'), 10) || 0; } catch (e) {}
+            if (typeof data.warnings === 'number') warningsCount = Math.max(warningsCount, data.warnings);
 
             document.getElementById('start-screen').classList.remove('active');
             if (data.finished) {
@@ -174,6 +220,7 @@
             .then(res => {
                 sid = res.sid;
                 saveSid(sid);
+                for (; pendingLeaves > 0; pendingLeaves--) reportTabLeave();
                 totalQuestions = res.total;
                 document.getElementById('q-total').innerText = totalQuestions;
                 setTimeout(() => renderQuestion(res.question), 400);
@@ -243,7 +290,11 @@
                 });
                 container.appendChild(optionsDiv);
             } else if (q.type === 'input') {
-                container.innerHTML = `<input type="text" id="open-answer" placeholder="Введите ответ..." onpaste="return false;" autocomplete="off" onkeydown="if(event.key==='Enter') nextQuestion();">`;
+                const input = document.createElement('input');
+                Object.assign(input, { type: 'text', id: 'open-answer', placeholder: 'Введите ответ...', autocomplete: 'off' });
+                input.addEventListener('paste', (e) => e.preventDefault());
+                input.addEventListener('keydown', (e) => { if (e.key === 'Enter') nextQuestion(); });
+                container.appendChild(input);
                 setTimeout(() => document.getElementById('open-answer').focus(), 100);
             }
 
@@ -363,6 +414,7 @@
         try {
             const res = await fetch('/api/question/' + sid);
             const data = await res.json();
+            if (data.annulled) { showCheatFail(); return; }
             if (data.status === 'success') {
                 if (data.finished) { endTest(); return; }
                 renderQuestion(data.question);

@@ -2,6 +2,8 @@
    АДМИНКА — поверх style.css (цвета и шрифты оттуда)
    ============================================================ */
 body { display: block; padding: 0; -webkit-user-select: auto; user-select: auto; }
+/* Атрибут hidden должен скрывать всегда: иначе display: grid у .item перебивает его (поиск не работал) */
+[hidden] { display: none !important; }
 .admin { max-width: 1120px; margin: 0 auto; padding: 20px 16px 48px; }
 .muted { color: var(--text-muted); font-weight: 500; }
 a { color: inherit; }
