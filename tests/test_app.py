@@ -32,10 +32,14 @@ PHONE = "+998901234567"
 
 
 class FakeResp:
-    def __init__(self, ok=True, status=200):
+    def __init__(self, ok=True, status=200, body=None):
         self.ok = ok
         self.status_code = status
         self.text = "ok" if ok else "error"
+        self._body = body or {}
+
+    def json(self):
+        return self._body
 
 
 class BaseCase(unittest.TestCase):
@@ -243,6 +247,24 @@ class TestTelegram(BaseCase):
         self.sent.clear()
         app._resend_unsent()
         self.assertEqual(self.sent, [])
+
+
+    def test_repeat_attempt_shown_to_admins(self):
+        for _ in range(2):
+            sid = self.start()
+            self.finish(sid, correct=10)
+            self.submit(sid)
+        first, second = (kw["data"]["caption"] for _, kw in self.sent)
+        self.assertNotIn("Повторная сдача", first)
+        self.assertIn("попытка №2", second)
+        self.assertIn("прошлая: 10/50", second)
+
+    def test_429_waits_retry_after(self):
+        answers = [FakeResp(False, 429, {"parameters": {"retry_after": 7}}), FakeResp(True)]
+        sleeps = []
+        with mock.patch.object(app.requests, "post", side_effect=lambda url, **kw: answers.pop(0)),                 mock.patch.object(app.time, "sleep", side_effect=sleeps.append):
+            self.assertTrue(app._send_tg_worker("hi"))
+        self.assertEqual(sleeps, [8])
 
 
 class TestLimits(BaseCase):

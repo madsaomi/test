@@ -118,6 +118,16 @@ def security_headers(resp):
     resp.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
     return resp
 
+def retry_wait(resp, default):
+    """Пауза перед повтором. На 429 Telegram говорит, сколько ждать (retry_after):
+    повтор раньше снова получит 429 и сожжет попытку. Ждем не больше минуты."""
+    if resp.status_code == 429:
+        try:
+            return min(int(resp.json()["parameters"]["retry_after"]) + 1, 60)
+        except Exception:
+            pass
+    return default
+
 def get_chat_ids():
     """Возвращает список всех ID получателей из переменных окружения"""
     if CHAT_ID:
@@ -144,9 +154,10 @@ def _send_tg_worker(message, result_id=None, photo_bytes=None):
     for cid in chat_ids:
         sent_ok = False
         last_error = None
-        # До 3 попыток: сразу, через 5 и через 15 секунд.
+        # До 3 попыток: сразу, через 5 и через 10 секунд (на 429 — сколько просит Telegram).
         # Ретраим только сетевые сбои и 429/5xx — явные ошибки API ретраить бессмысленно.
         for attempt in range(3):
+            wait = 5 * (attempt + 1)
             try:
                 if photo_data:
                     # Отправляем заполненный бланк как фото с подписью
@@ -175,13 +186,14 @@ def _send_tg_worker(message, result_id=None, photo_bytes=None):
                 print(f"Ошибка отправки в Telegram: {last_error}")
                 if resp.status_code not in (429, 500, 502, 503, 504):
                     break
+                wait = retry_wait(resp, wait)
             except Exception as e:
                 # Текст сетевой ошибки requests содержит URL запроса, а в нем токен бота
                 last_error = f"Чат {cid}: {redact_token(e)}"
                 print(f"Ошибка сети при отправке в чат {cid}: {redact_token(e)}")
 
             if attempt < 2:
-                time.sleep(5 * (attempt + 1))
+                time.sleep(wait)
 
         if not sent_ok:
             all_success = False
@@ -234,10 +246,30 @@ def build_result_message(r, speed, resent=False):
         f"🎓 <b>Уровень:</b> {r['level']}",
         f"⏱ <b>Время:</b> {html.escape(r['time_spent'] or '')}",
         speed,
+    ])
+    repeat = repeat_line(r['phone'], r['id'])
+    if repeat:
+        msg_lines.append(repeat)
+    msg_lines.extend([
         f"📅 <b>Дата:</b> {r['date']}",
         f"🆔 <b>ID записи:</b> #{r['id']}"
     ])
     return "\n".join(msg_lines)
+
+def repeat_line(phone, result_id):
+    """Строка о повторной сдаче с этого номера; None — первая попытка.
+    Пересдачи не запрещены, но админ видит, что результат может быть лучшей из попыток."""
+    try:
+        count, last = database.phone_history(phone, result_id)
+    except Exception as e:
+        print(f"Ошибка истории сдач #{result_id}: {e}")
+        return None
+    if not count:
+        return None
+    when = (datetime.strptime(last["created_at"], "%Y-%m-%d %H:%M:%S")
+            .replace(tzinfo=timezone.utc).astimezone(reports.TZ_TASHKENT).strftime('%d.%m.%Y'))
+    return (f"🔁 <b>Повторная сдача:</b> попытка №{count + 1} с этого номера "
+            f"(прошлая: {last['score']}/{last['total']}, {when})")
 
 def build_result_sheet(r, questions):
     """Официальный бланк ответов с подсветкой; None, если не сгенерировался"""
@@ -353,6 +385,7 @@ def send_document(filename, data, caption):
     for cid in get_chat_ids():
         sent = False
         for attempt in range(3):
+            wait = 5 * (attempt + 1)
             try:
                 resp = requests.post(
                     f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument",
@@ -366,10 +399,11 @@ def send_document(filename, data, caption):
                 print(f"Бэкап: чат {cid}: HTTP {resp.status_code} ({resp.text[:100]})")
                 if resp.status_code not in (429, 500, 502, 503, 504):
                     break
+                wait = retry_wait(resp, wait)
             except Exception as e:
                 print(f"Бэкап: ошибка сети, чат {cid}: {redact_token(e)}")
             if attempt < 2:
-                time.sleep(5 * (attempt + 1))
+                time.sleep(wait)
         ok_all = ok_all and sent
     return ok_all
 

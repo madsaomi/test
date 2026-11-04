@@ -84,6 +84,8 @@ def init_db():
             )
         """)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_rate_hits ON rate_hits(kind, ip, ts)")
+        # История сдач по номеру телефона (пометка повторных попыток)
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_results_phone ON test_results(phone)")
 
         # Сессии теста: состояние прохождения между запросами (общее для всех воркеров)
         conn.execute("""
@@ -275,6 +277,20 @@ def claim_unsent_results(limit=10, min_age_minutes=15, max_age_days=7,
             ORDER BY id ASC
         """, claimed)
         return [dict(row) for row in cursor.fetchall()]
+
+def phone_history(phone, before_id):
+    """Прошлые сдачи с этого номера (до записи before_id): (количество, последняя или None).
+    Студент может пройти тест несколько раз и отправить лучшую попытку —
+    админ должен это видеть."""
+    with get_db() as conn:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM test_results WHERE phone = ? AND id < ?", (phone, before_id)
+        ).fetchone()[0]
+        last = conn.execute(
+            "SELECT score, total, created_at FROM test_results WHERE phone = ? AND id < ? ORDER BY id DESC LIMIT 1",
+            (phone, before_id)
+        ).fetchone()
+        return count, (dict(last) if last else None)
 
 def backup_snapshot(dest_path):
     """Согласованная копия базы в dest_path (для бэкапа).
