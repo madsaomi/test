@@ -239,36 +239,37 @@ def generate_filled_sheet(*args, **kwargs):
     COLOR_GRAY = (110, 110, 110, 255)
 
     # 1. Заполняем шапку студента
-    res_id = str(result_data.get('id', '1'))
+    # get(k) or '' — пустые поля приходят из БД как None, а str(None) печатал "None"
+    res_id = str(result_data.get('id') or '1')
     draw.text((160, 191), f"#{res_id}", fill=COLOR_TEXT, font=font_id, anchor="mm")
 
-    fio = str(result_data.get('fio', ''))[:40]
+    fio = str(result_data.get('fio') or '')[:40]
     draw.text((360, 175), fio, fill=COLOR_TEXT, font=font_val)
 
-    work_study = str(result_data.get('work_study', '')).strip()[:35]
+    work_study = str(result_data.get('work_study') or '').strip()[:35]
     if work_study:
         draw.text((1350, 175), work_study, fill=COLOR_TEXT, font=font_val)
 
-    phone = str(result_data.get('phone', ''))
+    phone = str(result_data.get('phone') or '')
     draw.text((215, 245), phone, fill=COLOR_TEXT, font=font_val)
 
-    phone2 = str(result_data.get('phone2', '')).strip()
+    phone2 = str(result_data.get('phone2') or '').strip()
     if phone2:
         draw.text((1220, 245), phone2, fill=COLOR_TEXT, font=font_val)
 
-    source = str(result_data.get('source', '')).strip()[:35]
+    source = str(result_data.get('source') or '').strip()[:35]
     if source:
         draw.text((435, 936), source, fill=COLOR_TEXT, font=font_val)
 
-    date_str = str(result_data.get('date', ''))
+    date_str = str(result_data.get('date') or '')
     draw.text((1490, 936), date_str, fill=COLOR_TEXT, font=font_val)
 
     # Экзаменационный штамп / бейдж проверки по центру шапки
     score = result_data.get('score', 0)
     total = result_data.get('total', 50)
     percentage = round((score / total) * 100, 1) if total > 0 else 0
-    level = str(result_data.get('level', ''))
-    branch = str(result_data.get('branch', ''))
+    level = str(result_data.get('level') or '')
+    branch = str(result_data.get('branch') or '')
 
     badge_box = (540, 30, 1280, 126)
     # Светлая брендовая подложка

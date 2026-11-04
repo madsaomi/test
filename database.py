@@ -278,6 +278,31 @@ def claim_unsent_results(limit=10, min_age_minutes=15, max_age_days=7,
         """, claimed)
         return [dict(row) for row in cursor.fetchall()]
 
+def get_result(result_id):
+    """Одна запись результата со всем нужным для бланка, или None"""
+    with get_db() as conn:
+        row = conn.execute("""
+            SELECT id, created_at, fio, phone, phone2, branch, work_study, source,
+                   score, total, level, time_spent, answers_json, questions_json
+            FROM test_results WHERE id = ?
+        """, (result_id,)).fetchone()
+        return dict(row) if row else None
+
+def get_admin_stats(day_start_utc, month_start_utc):
+    """Сводка для админки: всего, сегодня, за месяц, средний балл за месяц,
+    флаги за месяц и недоставленные в Telegram"""
+    with get_db() as conn:
+        one = lambda sql, *a: conn.execute(sql, a).fetchone()[0]
+        return {
+            "total": one("SELECT COUNT(*) FROM test_results"),
+            "today": one("SELECT COUNT(*) FROM test_results WHERE created_at >= ?", day_start_utc),
+            "month": one("SELECT COUNT(*) FROM test_results WHERE created_at >= ?", month_start_utc),
+            "month_avg": one("SELECT AVG(score) FROM test_results WHERE created_at >= ?", month_start_utc),
+            "month_flagged": one("SELECT COUNT(*) FROM test_results WHERE created_at >= ? AND flags > 0",
+                                 month_start_utc),
+            "unsent": one("SELECT COUNT(*) FROM test_results WHERE telegram_sent != 1"),
+        }
+
 def phone_history(phone, before_id):
     """Прошлые сдачи с этого номера (до записи before_id): (количество, последняя или None).
     Студент может пройти тест несколько раз и отправить лучшую попытку —

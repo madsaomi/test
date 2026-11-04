@@ -351,6 +351,73 @@ class TestBackup(BaseCase):
         self.assertEqual(gzip.decompress(r.data)[:15], b"SQLite format 3")
 
 
+class TestAdminPage(BaseCase):
+    def login(self, token="admintoken"):
+        return self.client.post("/admin/login", data={"token": token})
+
+    def test_login_form_without_cookie(self):
+        r = self.client.get("/admin")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("Токен администратора", r.get_data(as_text=True))
+
+    def test_wrong_token_rejected_and_counted(self):
+        self.assertEqual(self.login("bad").status_code, 403)
+        with database.get_db() as conn:
+            self.assertEqual(conn.execute("SELECT COUNT(*) FROM rate_hits WHERE kind='admin_fail'").fetchone()[0], 1)
+
+    def test_login_sets_signed_cookie_not_token(self):
+        r = self.login()
+        self.assertEqual(r.status_code, 303)
+        cookie = r.headers["Set-Cookie"]
+        self.assertIn("HttpOnly", cookie)
+        self.assertIn("SameSite=Strict", cookie)
+        self.assertNotIn("admintoken", cookie)
+
+    def test_page_lists_results_escaped(self):
+        sid = self.start()
+        self.finish(sid, correct=12)
+        self.submit(sid, fio="<b>Хакер</b> Тест")
+        self.login()
+        page = self.client.get("/admin").get_data(as_text=True)
+        self.assertIn("&lt;b&gt;Хакер&lt;/b&gt;", page)
+        self.assertNotIn("<b>Хакер</b>", page)
+        self.assertIn("12<span", page)
+
+    def test_cookie_grants_api_and_sheet(self):
+        sid = self.start()
+        self.finish(sid)
+        self.submit(sid)
+        rid = self.results()[0]["id"]
+        self.assertEqual(self.client.get(f"/admin/sheet/{rid}").status_code, 403)
+        self.login()
+        self.assertEqual(self.client.get("/admin/results").status_code, 200)
+        r = self.client.get(f"/admin/sheet/{rid}")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.mimetype, "image/jpeg")
+        self.assertEqual(self.client.get("/admin/sheet/999999").status_code, 404)
+
+    def test_sheet_has_no_none_for_empty_fields(self):
+        sid = self.start()
+        self.finish(sid)
+        self.submit(sid)  # без второго номера, учебы и источника
+        self.login()
+        drawn = []
+        real_text = app.sheet_generator.ImageDraw.ImageDraw.text
+        def spy(draw, xy, text, *a, **kw):
+            drawn.append(str(text))
+            return real_text(draw, xy, text, *a, **kw)
+        with mock.patch.object(app.sheet_generator.ImageDraw.ImageDraw, "text", spy):
+            self.client.get(f"/admin/sheet/{self.results()[0]['id']}")
+        self.assertTrue(drawn)
+        self.assertNotIn("None", " ".join(drawn))
+
+    def test_logout_clears_access(self):
+        self.login()
+        self.client.post("/admin/logout")
+        self.assertIn("Токен администратора", self.client.get("/admin").get_data(as_text=True))
+        self.assertEqual(self.client.get("/admin/results").status_code, 403)
+
+
 class TestMigration(unittest.TestCase):
     def test_init_db_upgrades_old_schema(self):
         path = os.path.join(_TMP, "old.db")

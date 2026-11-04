@@ -5,10 +5,12 @@ import io
 import re
 import time
 import secrets
+import hmac
+import hashlib
 import threading
 from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, redirect, make_response
 from werkzeug.middleware.proxy_fix import ProxyFix
 import requests
 
@@ -31,7 +33,8 @@ app = Flask(__name__)
 # которые дописали наши прокси (Railway/Heroku — 1). Без прокси — 0.
 TRUSTED_PROXIES = int(os.environ.get("TRUSTED_PROXIES", "1"))
 if TRUSTED_PROXIES > 0:
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=TRUSTED_PROXIES)
+    # x_proto: за прокси приложение знает, что запрос пришел по HTTPS (secure-cookie админки)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=TRUSTED_PROXIES, x_proto=TRUSTED_PROXIES)
 
 # Инициализация базы данных SQLite
 database.init_db()
@@ -783,21 +786,115 @@ def submit():
 ADMIN_FAIL_LIMIT = 10
 ADMIN_FAIL_WINDOW = 900
 
+# Вход в админку: токен вводится один раз в форме, дальше браузер носит cookie.
+# В cookie не сам токен, а его HMAC — утечка cookie не раскрывает ADMIN_TOKEN,
+# а смена ADMIN_TOKEN сразу разлогинивает всех. SameSite=Strict: с чужого сайта
+# cookie не отправится, поэтому ссылки-ловушки на /admin/report не сработают.
+ADMIN_COOKIE = "slc_admin"
+ADMIN_COOKIE_MAX_AGE = 12 * 3600
+
+def _admin_cookie_value():
+    return hmac.new(ADMIN_TOKEN.encode(), b"slc-admin-session", hashlib.sha256).hexdigest()
+
+def _token_ok(token):
+    # Байты, а не str: compare_digest падает с TypeError на не-ASCII строке
+    return secrets.compare_digest(token.encode(), ADMIN_TOKEN.encode())
+
+def admin_cookie_ok():
+    cookie = request.cookies.get(ADMIN_COOKIE, "")
+    return bool(ADMIN_TOKEN) and secrets.compare_digest(cookie.encode(), _admin_cookie_value().encode())
+
+def admin_locked_out(ip):
+    return not database.rate_allow("admin_fail", ip, ADMIN_FAIL_LIMIT, ADMIN_FAIL_WINDOW, record=False)
+
 def admin_denied():
-    """Проверка ADMIN_TOKEN. None — доступ разрешен, иначе готовый ответ с ошибкой."""
+    """Проверка доступа (cookie админки, заголовок X-Admin-Token или ?key=).
+    None — доступ разрешен, иначе готовый ответ с ошибкой."""
     if not ADMIN_TOKEN:
         return jsonify({"status": "error", "message": "Не найдено"}), 404
 
     ip = get_client_ip()
-    if not database.rate_allow("admin_fail", ip, ADMIN_FAIL_LIMIT, ADMIN_FAIL_WINDOW, record=False):
+    if admin_locked_out(ip):
         return jsonify({"status": "error", "message": "Слишком много попыток. Попробуйте позже."}), 429
+    if admin_cookie_ok():
+        return None
 
     token = request.headers.get('X-Admin-Token', '') or request.args.get('key', '')
-    # Байты, а не str: compare_digest падает с TypeError на не-ASCII строке (было 500)
-    if not secrets.compare_digest(token.encode(), ADMIN_TOKEN.encode()):
+    if not _token_ok(token):
         database.rate_record("admin_fail", ip)
         return jsonify({"status": "error", "message": "Доступ запрещен"}), 403
     return None
+
+def _local_dt(created_at):
+    """created_at из БД (UTC) -> datetime по Ташкенту"""
+    return (datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
+            .replace(tzinfo=timezone.utc).astimezone(reports.TZ_TASHKENT))
+
+@app.route('/admin', methods=['GET'])
+def admin_page():
+    """Страница админки: сводка, таблица результатов, бэкап и отчеты"""
+    if not ADMIN_TOKEN:
+        return render_template('404.html'), 404
+    if not admin_cookie_ok():
+        return render_template('admin_login.html', error=None)
+
+    try:
+        limit = max(1, min(int(request.args.get('limit', 100)), 500))
+    except ValueError:
+        limit = 100
+    rows = database.get_recent_results(limit)
+    for r in rows:
+        r["local"] = _local_dt(r["created_at"]).strftime('%d.%m.%Y %H:%M')
+
+    now = datetime.now(reports.TZ_TASHKENT)
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    month_start, _ = reports._period_bounds_utc(now.year, now.month)
+    stats = database.get_admin_stats(
+        day_start.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), month_start)
+    prev = _prev_month(now)
+    return render_template('admin.html', rows=rows, stats=stats, limit=limit,
+                           prev_period=prev.strftime('%Y-%m'), now=now.strftime('%d.%m.%Y %H:%M'),
+                           telegram_ok=bool(BOT_TOKEN and get_chat_ids()))
+
+@app.route('/admin/login', methods=['POST'])
+def admin_login():
+    if not ADMIN_TOKEN:
+        return render_template('404.html'), 404
+    ip = get_client_ip()
+    if admin_locked_out(ip):
+        return render_template('admin_login.html', error="Слишком много попыток. Подождите 15 минут."), 429
+    if not _token_ok(request.form.get('token', '').strip()):
+        database.rate_record("admin_fail", ip)
+        return render_template('admin_login.html', error="Неверный токен"), 403
+    resp = redirect('/admin', code=303)
+    resp.set_cookie(ADMIN_COOKIE, _admin_cookie_value(), max_age=ADMIN_COOKIE_MAX_AGE,
+                    httponly=True, samesite="Strict", secure=request.is_secure, path="/admin")
+    return resp
+
+@app.route('/admin/logout', methods=['POST'])
+def admin_logout():
+    resp = redirect('/admin', code=303)
+    resp.delete_cookie(ADMIN_COOKIE, path="/admin")
+    return resp
+
+@app.route('/admin/sheet/<int:result_id>')
+def admin_sheet(result_id):
+    """Бланк ответов любого результата (пересобирается из снимка вопросов)"""
+    denied = admin_denied()
+    if denied:
+        return denied
+    row = database.get_result(result_id)
+    if not row:
+        return jsonify({"status": "error", "message": "Результат не найден"}), 404
+    if not row["questions_json"]:
+        return jsonify({"status": "error", "message": "Для старых записей бланк не сохранен"}), 404
+    r = dict(row)
+    r["date"] = _local_dt(row["created_at"]).strftime('%d.%m.%Y %H:%M')
+    r["answers"] = json.loads(row["answers_json"] or "{}")
+    photo = build_result_sheet(r, json.loads(row["questions_json"]))
+    if not photo:
+        return jsonify({"status": "error", "message": "Не удалось нарисовать бланк"}), 500
+    return send_file(photo, mimetype="image/jpeg", download_name=f"blank-{result_id}.jpg")
 
 @app.route('/admin/results')
 def admin_results():
