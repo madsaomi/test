@@ -186,6 +186,36 @@ input[type="text"]:focus, input[type="tel"]:focus { border-color: var(--primary)
 .branch-btn:active { transform: scale(0.97); }
 .branch-btn:has(input:checked) { border-color: var(--primary); background: var(--tint); color: var(--brand-black); box-shadow: 0 4px 12px rgba(255, 183, 3, 0.22); }
 
+.req-star { color: #ef4444; font-weight: 700; margin-left: 2px; }
+.opt-label { font-weight: 400; font-size: 13px; color: var(--text-muted); margin-left: 4px; }
+
+.source-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.source-chip {
+    flex: 1 1 calc(50% - 10px);
+    min-width: 130px;
+    padding: 13px 12px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    background: white;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.source-chip input { display: none; }
+.source-chip:hover { border-color: var(--border-hover); background: #FFFCF4; transform: translateY(-1px); }
+.source-chip:active { transform: scale(0.97); }
+.source-chip:has(input:checked), .source-chip.selected {
+    border-color: var(--primary);
+    background: var(--tint);
+    color: var(--brand-black);
+    box-shadow: 0 4px 12px rgba(255, 183, 3, 0.22);
+}
+
 @media (max-width: 600px) {
     .container { padding: 24px 18px; border-radius: 20px; }
     h1 { font-size: 23px; }

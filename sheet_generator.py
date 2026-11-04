@@ -245,19 +245,42 @@ def generate_filled_sheet(*args, **kwargs):
     fio = str(result_data.get('fio', ''))[:40]
     draw.text((360, 175), fio, fill=COLOR_TEXT, font=font_val)
 
-    branch = str(result_data.get('branch', ''))
-    draw.text((1360, 175), f"Филиал: {branch}", fill=COLOR_TEXT, font=font_val)
+    work_study = str(result_data.get('work_study', '')).strip()[:35]
+    if work_study:
+        draw.text((1350, 175), work_study, fill=COLOR_TEXT, font=font_val)
 
     phone = str(result_data.get('phone', ''))
     draw.text((215, 245), phone, fill=COLOR_TEXT, font=font_val)
 
+    phone2 = str(result_data.get('phone2', '')).strip()
+    if phone2:
+        draw.text((1220, 245), phone2, fill=COLOR_TEXT, font=font_val)
+
+    source = str(result_data.get('source', '')).strip()[:35]
+    if source:
+        draw.text((435, 936), source, fill=COLOR_TEXT, font=font_val)
+
     date_str = str(result_data.get('date', ''))
     draw.text((1490, 936), date_str, fill=COLOR_TEXT, font=font_val)
 
+    # Экзаменационный штамп / бейдж проверки по центру шапки
     score = result_data.get('score', 0)
     total = result_data.get('total', 50)
-    level = result_data.get('level', '')
-    draw.text((435, 936), f"ИТОГ: {score}/{total}  ({level})", fill=(22, 101, 52, 255), font=font_val)
+    percentage = round((score / total) * 100, 1) if total > 0 else 0
+    level = str(result_data.get('level', ''))
+    branch = str(result_data.get('branch', ''))
+
+    badge_box = (540, 30, 1280, 126)
+    # Светлая брендовая подложка
+    draw.rounded_rectangle(badge_box, radius=14, fill=(255, 252, 240, 245), outline=BRAND_YELLOW, width=3)
+    
+    font_badge_score = get_font(23, bold=True)
+    font_badge_sub = get_font(18, bold=True)
+    
+    score_line = f"РЕЗУЛЬТАТ: {score} из {total}  ({percentage}%)"
+    level_line = f"УРОВЕНЬ: {level.upper()}  •  ФИЛИАЛ: {branch.upper()}"
+    draw.text((910, 56), score_line, fill=COLOR_TEXT, font=font_badge_score, anchor="mm")
+    draw.text((910, 98), level_line, fill=(22, 101, 52, 255), font=font_badge_sub, anchor="mm")
 
     # 2. Вопросы 1 - 45 с математически идеальным попаданием
     grid_left = 40
@@ -366,7 +389,7 @@ def generate_filled_sheet(*args, **kwargs):
             correct_display = str(raw_ans)
 
         if not user_val:
-            draw.text((bx_start, by + 4), f"Не указано  [{correct_display}]", fill=COLOR_GRAY, font=font_small)
+            draw.text((bx_start, by + 4), f"—  [{correct_display}]", fill=COLOR_GRAY, font=font_small)
         elif is_correct:
             draw.text((bx_start, by), user_val, fill=COLOR_CORRECT, font=font_val)
             val_w = int(draw.textlength(user_val, font=font_val))

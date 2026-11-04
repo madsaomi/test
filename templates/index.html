@@ -84,16 +84,49 @@
         <p class="subtitle">Пожалуйста, заполните данные для сохранения результата.</p>
         
         <div class="form-group">
-            <label class="field-title" for="fio">Фамилия и Имя</label>
+            <label class="field-title" for="fio">Фамилия и Имя <span class="req-star">*</span></label>
             <input type="text" id="fio" placeholder="Например: Алишер Рустамов" required autocomplete="off" onkeydown="if(event.key==='Enter') document.getElementById('phone').focus();">
             
-            <label class="field-title" for="phone">Номер телефона</label>
+            <label class="field-title" for="phone">Основной номер телефона <span class="req-star">*</span></label>
             <div class="phone-wrapper">
                 <span class="phone-prefix">+998</span>
-                <input type="tel" id="phone" placeholder="90 123 45 67" maxlength="12" inputmode="numeric" oninput="formatPhoneInput(this)" onkeydown="if(event.key==='Enter') submitResults();" required autocomplete="off">
+                <input type="tel" id="phone" placeholder="90 123 45 67" maxlength="12" inputmode="numeric" oninput="formatPhoneInput(this)" onkeydown="if(event.key==='Enter') document.getElementById('work_study').focus();" required autocomplete="off">
+            </div>
+
+            <label class="field-title" for="work_study">Место учебы / работы <span class="opt-label">(необязательно)</span></label>
+            <input type="text" id="work_study" placeholder="Например: Школа №17 или ТГЭУ, 2 курс" autocomplete="off" onkeydown="if(event.key==='Enter') document.getElementById('phone2').focus();">
+
+            <label class="field-title" for="phone2">Второй номер телефона <span class="opt-label">(родители / запасной)</span></label>
+            <div class="phone-wrapper">
+                <span class="phone-prefix">+998</span>
+                <input type="tel" id="phone2" placeholder="93 987 65 43" maxlength="12" inputmode="numeric" oninput="formatPhoneInput(this)" autocomplete="off">
+            </div>
+
+            <label class="field-title">Откуда вы узнали о Stanford LC? <span class="opt-label">(необязательно)</span></label>
+            <div class="source-chips">
+                <label class="source-chip">
+                    <input type="radio" name="source" value="Instagram">
+                    <span>📸 Instagram</span>
+                </label>
+                <label class="source-chip">
+                    <input type="radio" name="source" value="Telegram">
+                    <span>✈️ Telegram</span>
+                </label>
+                <label class="source-chip">
+                    <input type="radio" name="source" value="Друзья / Знакомые">
+                    <span>👥 Знакомые</span>
+                </label>
+                <label class="source-chip">
+                    <input type="radio" name="source" value="Вывеска / Рядом живу">
+                    <span>📍 Вывеска</span>
+                </label>
+                <label class="source-chip">
+                    <input type="radio" name="source" value="Другое">
+                    <span>Другое</span>
+                </label>
             </div>
             
-            <label class="field-title">Выберите филиал</label>
+            <label class="field-title">Выберите филиал <span class="req-star">*</span></label>
             <div class="branch-selector">
                 <label class="branch-btn">
                     <input type="radio" name="branch" value="Офис">

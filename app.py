@@ -5,9 +5,10 @@ import re
 import time
 import secrets
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, render_template, request, jsonify
+from werkzeug.middleware.proxy_fix import ProxyFix
 import requests
 
 try:
@@ -23,6 +24,13 @@ import test_session
 from text_utils import normalize_text
 
 app = Flask(__name__)
+
+# Реальный IP клиента за прокси хостинга. Клиент может сам прислать любой
+# X-Forwarded-For, поэтому доверяем только последним TRUSTED_PROXIES записям,
+# которые дописали наши прокси (Railway/Heroku — 1). Без прокси — 0.
+TRUSTED_PROXIES = int(os.environ.get("TRUSTED_PROXIES", "1"))
+if TRUSTED_PROXIES > 0:
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=TRUSTED_PROXIES)
 
 # Инициализация базы данных SQLite
 database.init_db()
@@ -41,14 +49,12 @@ ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "").strip()
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
 
 # Анти-спам с учетом реального сценария: студенты филиала сидят за одним Wi-Fi (общий IP),
-# поэтому лимиты "классные", а не персональные.
+# поэтому лимиты "классные", а не персональные. Счетчики в SQLite — общие для всех воркеров.
 SESSION_START_LIMIT = 60    # стартов теста с IP за 10 минут
 SESSION_START_WINDOW = 600
-_session_starts_by_ip = {}
 
 SUBMIT_LIMIT = 30           # успешных отправок с IP за 10 минут
 SUBMIT_WINDOW = 600
-_submit_times_by_ip = {}
 
 # Минимальное общее время прохождения, ниже которого результат помечается флагом
 MIN_TOTAL_SECONDS = 360
@@ -139,6 +145,80 @@ def send_to_telegram_sync(message):
     """Синхронная отправка (для отчетов в фоновом потоке). Возвращает успех."""
     return _send_tg_worker(message)
 
+def speed_line(flags, too_fast, too_slow, total_elapsed):
+    """Отметка о скорости прохождения для администратора"""
+    if flags:
+        return f"🚩 <b>Скорость:</b> подозрительная ({too_fast} сверхбыстрых, {too_slow} затянутых, {int(total_elapsed)} сек общее)"
+    return f"✅ <b>Скорость:</b> в норме ({int(total_elapsed)} сек)"
+
+def build_result_message(r, speed, resent=False):
+    """Подпись к бланку в Telegram (пользовательские данные экранируются)"""
+    title = "📝 <b>Новый результат теста!</b>"
+    if resent:
+        title += " <i>(досылка)</i>"
+    msg_lines = [
+        title + "\n",
+        f"👤 <b>ФИО:</b> {html.escape(r['fio'])}",
+        f"📞 <b>Телефон:</b> {r['phone']}",
+    ]
+    if r.get('phone2'):
+        msg_lines.append(f"📞 <b>Телефон 2:</b> {r['phone2']} <i>(родители/запасной)</i>")
+    msg_lines.append(f"🏢 <b>Филиал:</b> {html.escape(r['branch'] or '')}")
+    if r.get('work_study'):
+        msg_lines.append(f"🎓 <b>Учеба / Работа:</b> {html.escape(r['work_study'])}")
+    if r.get('source'):
+        msg_lines.append(f"📢 <b>Источник:</b> {html.escape(r['source'])}")
+
+    msg_lines.extend([
+        "",
+        f"📊 <b>Результат:</b> {r['score']} из {r['total']}",
+        f"🎓 <b>Уровень:</b> {r['level']}",
+        f"⏱ <b>Время:</b> {html.escape(r['time_spent'] or '')}",
+        speed,
+        f"📅 <b>Дата:</b> {r['date']}",
+        f"🆔 <b>ID записи:</b> #{r['id']}"
+    ])
+    return "\n".join(msg_lines)
+
+def build_result_sheet(r, questions):
+    """Официальный бланк ответов с подсветкой; None, если не сгенерировался"""
+    if not questions:
+        return None
+    try:
+        return sheet_generator.generate_filled_sheet(result_data=r, all_questions=questions)
+    except Exception as e:
+        print(f"Ошибка генерации бланка ответов #{r.get('id')}: {e}")
+        return None
+
+# ================= ДОСЫЛКА В TELEGRAM =================
+# Если Telegram был недоступен в момент сдачи (все ретраи исчерпаны или сервер
+# перезапустился), результат остается с telegram_sent = 0. Фоновый цикл раз в
+# 10 минут пересобирает бланк из снимка вопросов и досылает его.
+
+def _resend_unsent():
+    if not BOT_TOKEN or not get_chat_ids():
+        return  # без настроек не тратим попытки досылки
+    for row in database.claim_unsent_results():
+        try:
+            timing = json.loads(row["timing_json"] or "{}")
+            created = datetime.strptime(row["created_at"], "%Y-%m-%d %H:%M:%S") \
+                .replace(tzinfo=timezone.utc).astimezone(reports.TZ_TASHKENT)
+            r = dict(row)
+            r["date"] = created.strftime('%d.%m.%Y %H:%M')
+            r["answers"] = json.loads(row["answers_json"] or "{}")
+            speed = speed_line(row["flags"] or 0, timing.get("too_fast", 0),
+                               timing.get("too_slow", 0), timing.get("total_sec", 0))
+            message = build_result_message(r, speed, resent=True)
+            # Старые записи без снимка вопросов досылаются текстом
+            questions = json.loads(row["questions_json"]) if row["questions_json"] else None
+            photo = build_result_sheet(r, questions)
+        except Exception as e:
+            database.update_telegram_status(row["id"], success=False, error=f"Досылка: {e}")
+            print(f"Ошибка подготовки досылки #{row['id']}: {e}")
+            continue
+        if _send_tg_worker(message, result_id=row["id"], photo_bytes=photo):
+            print(f"Результат #{row['id']} дослан в Telegram")
+
 # ================= ПЕРИОДИЧЕСКИЕ ОТЧЕТЫ =================
 # Месячный — 1-го числа за предыдущий месяц (догоняет, даже если сервер был выключен),
 # годовой — в первую неделю января за весь год.
@@ -192,6 +272,10 @@ def _report_worker():
             _maybe_send_reports()
         except Exception as e:
             print(f"Ошибка планировщика отчетов: {e}")
+        try:
+            _resend_unsent()
+        except Exception as e:
+            print(f"Ошибка досылки результатов: {e}")
         time.sleep(600)  # проверка каждые 10 минут
 
 threading.Thread(target=_report_worker, daemon=True).start()
@@ -237,8 +321,8 @@ def calculate_level(score, total=50):
         return "Upper-Intermediate+"
 
 def get_client_ip():
-    """IP клиента (за прокси берем первый X-Forwarded-For)"""
-    return request.headers.get('X-Forwarded-For', request.remote_addr or '?').split(',')[0].strip()
+    """IP клиента (за прокси его подставляет ProxyFix из доверенной записи X-Forwarded-For)"""
+    return request.remote_addr or '?'
 
 def client_question(q):
     """Вопрос для клиента: без правильного ответа, с персональным порядком вариантов"""
@@ -259,15 +343,9 @@ def index():
 @app.route('/test/start', methods=['POST'])
 def test_start():
     """Создает персональную сессию теста и возвращает первый вопрос"""
-    ip = get_client_ip()
-    now_ts = time.time()
-
     # Анти-спам: лимит стартов с одного IP
-    starts = [t for t in _session_starts_by_ip.get(ip, []) if now_ts - t < SESSION_START_WINDOW]
-    if len(starts) >= SESSION_START_LIMIT:
+    if not database.rate_allow("start", get_client_ip(), SESSION_START_LIMIT, SESSION_START_WINDOW):
         return jsonify({"status": "error", "message": "Слишком много попыток. Попробуйте позже."}), 429
-    starts.append(now_ts)
-    _session_starts_by_ip[ip] = starts
 
     # Периодическая чистка брошенных сессий
     try:
@@ -385,13 +463,9 @@ def submit():
     now_ts = time.time()
 
     # Анти-спам: не более SUBMIT_LIMIT успешных отправок с IP за окно
-    times = [t for t in _submit_times_by_ip.get(client_ip, []) if now_ts - t < SUBMIT_WINDOW]
-    if len(times) >= SUBMIT_LIMIT:
+    # (засчитываем ниже, только когда результат сохранен)
+    if not database.rate_allow("submit", client_ip, SUBMIT_LIMIT, SUBMIT_WINDOW, record=False):
         return jsonify({"status": "error", "message": "Слишком много отправок. Попробуйте позже."}), 429
-    # Чистим старые записи, чтобы словарь не рос бесконечно
-    if len(_submit_times_by_ip) > 5000:
-        for stale_ip in [ip for ip, ts in _submit_times_by_ip.items() if not ts or now_ts - max(ts) >= SUBMIT_WINDOW]:
-            _submit_times_by_ip.pop(stale_ip, None)
 
     raw_fio = str(payload.get('fio', '')).strip()
     raw_phone = str(payload.get('phone', '')).strip()
@@ -451,7 +525,10 @@ def submit():
     if not database.mark_session_submitted(sid):
         return jsonify({"status": "error", "message": "Результат уже отправлен"}), 400
 
-    # Персистентное сохранение в базу данных SQLite (защита от потери заявки)
+    # Персистентное сохранение в базу данных SQLite (защита от потери заявки).
+    # questions_json — снимок вопросов сессии: по нему бланк можно пересобрать
+    # и дослать в Telegram, если отправка в момент сдачи не удалась.
+    questions_snapshot = json.dumps(session_data["questions"], ensure_ascii=False)
     try:
         result_id = database.save_result(
             fio=fio,
@@ -466,7 +543,8 @@ def submit():
             timing_json=timing_json,
             work_study=work_study,
             phone2=phone2,
-            source=source
+            source=source,
+            questions_json=questions_snapshot
         )
     except Exception:
         # Сохранение не удалось — возвращаем студенту возможность повторить
@@ -474,63 +552,26 @@ def submit():
         raise
 
     # Отправка принята — отмечаем IP для анти-спама
-    times.append(now_ts)
-    _submit_times_by_ip[client_ip] = times
+    database.rate_record("submit", client_ip)
 
-    # Отметка о скорости для администратора
-    if flags:
-        speed_line = f"🚩 <b>Скорость:</b> подозрительная ({too_fast} сверхбыстрых, {too_slow} затянутых, {int(total_elapsed)} сек общее)"
-    else:
-        speed_line = f"✅ <b>Скорость:</b> в норме ({int(total_elapsed)} сек)"
-
-    # Формируем текстовую подпись к фото в Telegram (экранируем пользовательские данные)
-    msg_lines = [
-        "📝 <b>Новый результат теста!</b>\n",
-        f"👤 <b>ФИО:</b> {html.escape(fio)}",
-        f"📞 <b>Телефон:</b> {phone}",
-    ]
-    if phone2:
-        msg_lines.append(f"📞 <b>Телефон 2:</b> {phone2} <i>(родители/запасной)</i>")
-    msg_lines.append(f"🏢 <b>Филиал:</b> {html.escape(branch)}")
-    if work_study:
-        msg_lines.append(f"🎓 <b>Учеба / Работа:</b> {html.escape(work_study)}")
-    if source:
-        msg_lines.append(f"📢 <b>Источник:</b> {html.escape(source)}")
-    
-    msg_lines.extend([
-        "",
-        f"📊 <b>Результат:</b> {score} из {total}",
-        f"🎓 <b>Уровень:</b> {level}",
-        f"⏱ <b>Время:</b> {html.escape(time_spent)}",
-        speed_line,
-        f"📅 <b>Дата:</b> {now}",
-        f"🆔 <b>ID записи:</b> #{result_id}"
-    ])
-    message = "\n".join(msg_lines)
-
-    # Генерация официального бланка ответов с подсветкой (по вопросам этой сессии)
-    photo_bytes = None
-    try:
-        res_data = {
-            'id': result_id,
-            'fio': fio,
-            'phone': phone,
-            'phone2': phone2,
-            'work_study': work_study,
-            'source': source,
-            'branch': branch,
-            'date': now,
-            'score': score,
-            'total': total,
-            'level': level,
-            'answers': session_data["answers"]
-        }
-        photo_bytes = sheet_generator.generate_filled_sheet(
-            result_data=res_data,
-            all_questions=session_data["questions"]
-        )
-    except Exception as e:
-        print(f"Ошибка генерации бланка ответов: {e}")
+    res_data = {
+        'id': result_id,
+        'fio': fio,
+        'phone': phone,
+        'phone2': phone2,
+        'work_study': work_study,
+        'source': source,
+        'branch': branch,
+        'date': now,
+        'score': score,
+        'total': total,
+        'level': level,
+        'time_spent': time_spent,
+        'answers': session_data["answers"]
+    }
+    speed = speed_line(flags, too_fast, too_slow, total_elapsed)
+    message = build_result_message(res_data, speed)
+    photo_bytes = build_result_sheet(res_data, session_data["questions"])
 
     # Фоновая отправка в Telegram без блокировки клиента
     send_to_telegram_async(message, result_id=result_id, photo_bytes=photo_bytes)

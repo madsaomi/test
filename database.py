@@ -1,6 +1,7 @@
 import sqlite3
 import json
 import os
+import time
 from contextlib import contextmanager
 from datetime import datetime
 
@@ -41,15 +42,44 @@ def init_db():
                 telegram_sent INTEGER DEFAULT 0,
                 telegram_error TEXT,
                 flags INTEGER DEFAULT 0,
-                timing_json TEXT
+                timing_json TEXT,
+                work_study TEXT,
+                phone2 TEXT,
+                source TEXT
             )
         """)
-        # Миграция старых баз: добавляем колонки анализа скорости
+        # Миграция старых баз: добавляем новые колонки
         cols = [r[1] for r in conn.execute("PRAGMA table_info(test_results)")]
         if "flags" not in cols:
             conn.execute("ALTER TABLE test_results ADD COLUMN flags INTEGER DEFAULT 0")
         if "timing_json" not in cols:
             conn.execute("ALTER TABLE test_results ADD COLUMN timing_json TEXT")
+        if "work_study" not in cols:
+            conn.execute("ALTER TABLE test_results ADD COLUMN work_study TEXT")
+        if "phone2" not in cols:
+            conn.execute("ALTER TABLE test_results ADD COLUMN phone2 TEXT")
+        if "source" not in cols:
+            conn.execute("ALTER TABLE test_results ADD COLUMN source TEXT")
+        # Снимок вопросов сессии (персональный порядок и варианты) — чтобы
+        # пересобрать фото-бланк при досылке, если Telegram был недоступен
+        if "questions_json" not in cols:
+            conn.execute("ALTER TABLE test_results ADD COLUMN questions_json TEXT")
+        # Досылка в Telegram: число попыток и время захвата записи воркером.
+        # telegram_sent: 0 — не доставлено, 1 — доставлено, 2 — досылается сейчас
+        if "telegram_attempts" not in cols:
+            conn.execute("ALTER TABLE test_results ADD COLUMN telegram_attempts INTEGER DEFAULT 0")
+        if "telegram_claimed_at" not in cols:
+            conn.execute("ALTER TABLE test_results ADD COLUMN telegram_claimed_at TIMESTAMP")
+
+        # Анти-спам: отметки запросов по IP (общие для всех gunicorn-воркеров)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS rate_hits (
+                kind TEXT NOT NULL,
+                ip TEXT NOT NULL,
+                ts REAL NOT NULL
+            )
+        """)
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_rate_hits ON rate_hits(kind, ip, ts)")
 
         # Сессии теста: состояние прохождения между запросами (общее для всех воркеров)
         conn.execute("""
@@ -76,7 +106,9 @@ def init_db():
             )
         """)
 
-def save_result(fio, phone, branch, score, total, level, time_spent, answers_map, flags=0, timing_json=None):
+def save_result(fio, phone, branch, score, total, level, time_spent, answers_map,
+                flags=0, timing_json=None, work_study=None, phone2=None, source=None,
+                questions_json=None):
     """
     Сохраняет результат тестирования в SQLite базу данных.
     Возвращает id созданной записи.
@@ -88,9 +120,9 @@ def save_result(fio, phone, branch, score, total, level, time_spent, answers_map
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO test_results
-            (fio, phone, branch, score, total, percentage, level, time_spent, answers_json, telegram_sent, flags, timing_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
-        """, (fio, phone, branch, score, total, percentage, level, time_spent, answers_json, flags, timing_json))
+            (fio, phone, branch, score, total, percentage, level, time_spent, answers_json, telegram_sent, flags, timing_json, work_study, phone2, source, questions_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
+        """, (fio, phone, branch, score, total, percentage, level, time_spent, answers_json, flags, timing_json, work_study, phone2, source, questions_json))
         return cursor.lastrowid
 
 def update_telegram_status(result_id, success, error=None):
@@ -107,7 +139,7 @@ def get_recent_results(limit=100):
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT id, created_at, fio, phone, branch, score, total, percentage, level, time_spent, telegram_sent, flags
+            SELECT id, created_at, fio, phone, branch, score, total, percentage, level, time_spent, telegram_sent, flags, work_study, phone2, source
             FROM test_results
             ORDER BY id DESC
             LIMIT ?
@@ -192,3 +224,72 @@ def get_results_in_range(start_utc, end_utc):
             ORDER BY id ASC
         """, (start_utc, end_utc))
         return [dict(row) for row in cursor.fetchall()]
+
+def claim_unsent_results(limit=10, min_age_minutes=15, max_age_days=7,
+                         max_attempts=10, lease_minutes=30):
+    """Атомарно захватывает недоставленные в Telegram результаты для досылки.
+
+    - свежие (моложе min_age_minutes) не трогаем: их еще досылает воркер /submit;
+    - старше max_age_days не трогаем: не заваливаем админов архивом;
+    - после max_attempts досылок сдаемся (например, бот удален из чата);
+    - запись, захваченная упавшим воркером, освобождается через lease_minutes.
+    Возвращает захваченные строки со всем нужным для пересборки бланка."""
+    pending = """
+        telegram_attempts < ?
+        AND created_at >= datetime('now', ?)
+        AND ((telegram_sent = 0 AND created_at < datetime('now', ?))
+             OR (telegram_sent = 2 AND telegram_claimed_at < datetime('now', ?)))
+    """
+    params = (max_attempts, f"-{int(max_age_days)} days",
+              f"-{int(min_age_minutes)} minutes", f"-{int(lease_minutes)} minutes")
+
+    claimed = []
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT id FROM test_results WHERE {pending} ORDER BY id ASC LIMIT ?",
+                       params + (limit,))
+        for (result_id,) in cursor.fetchall():
+            # Повторяем условие в UPDATE: второй воркер ту же запись не захватит
+            cursor.execute(f"""
+                UPDATE test_results
+                SET telegram_sent = 2, telegram_claimed_at = CURRENT_TIMESTAMP,
+                    telegram_attempts = telegram_attempts + 1
+                WHERE id = ? AND {pending}
+            """, (result_id,) + params)
+            if cursor.rowcount == 1:
+                claimed.append(result_id)
+        conn.commit()
+
+        if not claimed:
+            return []
+        marks = ",".join("?" * len(claimed))
+        cursor.execute(f"""
+            SELECT id, created_at, fio, phone, branch, score, total, level, time_spent,
+                   answers_json, questions_json, work_study, phone2, source, flags, timing_json
+            FROM test_results
+            WHERE id IN ({marks})
+            ORDER BY id ASC
+        """, claimed)
+        return [dict(row) for row in cursor.fetchall()]
+
+def rate_allow(kind, ip, limit, window_sec, record=True):
+    """Проверка лимита запросов с IP за окно (общая для всех воркеров).
+    True — запрос разрешен (и при record=True сразу засчитан), False — лимит исчерпан."""
+    now = time.time()
+    with get_db() as conn:
+        # IMMEDIATE: проверка и запись — одна транзакция, параллельный воркер ждет
+        conn.execute("BEGIN IMMEDIATE")
+        conn.execute("DELETE FROM rate_hits WHERE kind = ? AND ts < ?", (kind, now - window_sec))
+        count = conn.execute(
+            "SELECT COUNT(*) FROM rate_hits WHERE kind = ? AND ip = ?", (kind, ip)
+        ).fetchone()[0]
+        if count >= limit:
+            return False
+        if record:
+            conn.execute("INSERT INTO rate_hits (kind, ip, ts) VALUES (?, ?, ?)", (kind, ip, now))
+        return True
+
+def rate_record(kind, ip):
+    """Засчитывает запрос в лимит (когда считаем только успешные действия)"""
+    with get_db() as conn:
+        conn.execute("INSERT INTO rate_hits (kind, ip, ts) VALUES (?, ?, ?)", (kind, ip, time.time()))

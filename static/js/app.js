@@ -88,6 +88,14 @@
             });
         });
 
+        // То же для чипов источника
+        document.querySelectorAll('.source-chip input').forEach((radio) => {
+            radio.addEventListener('change', () => {
+                document.querySelectorAll('.source-chip').forEach((el) => el.classList.remove('selected'));
+                radio.closest('.source-chip').classList.add('selected');
+            });
+        });
+
         tryResume();
     }
 
@@ -388,12 +396,20 @@
         const secs = elapsed % 60;
         const timeStr = mins + ' мин ' + secs + ' сек';
 
+        // Новые поля формы (необязательные)
+        const workStudy = document.getElementById('work_study')?.value.trim() || '';
+        const phone2Raw = document.getElementById('phone2')?.value.replace(/\D/g, '') || '';
+        const sourceInput = document.querySelector('input[name="source"]:checked');
+
         // Ответы не отправляются: они уже хранятся в серверной сессии
         const data = {
             sid: sid,
             fio: fio,
             phone: "+998" + phoneRaw,
             branch: branchInput.value,
+            work_study: workStudy,
+            phone2: phone2Raw,
+            source: sourceInput ? sourceInput.value : '',
             time: timeStr,
             hp: (document.getElementById('hp-field')?.value || '')
         };

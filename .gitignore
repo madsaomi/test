@@ -26,3 +26,4 @@ results.db
 .DS_Store
 Thumbs.db
 *.log
+.zcode/
