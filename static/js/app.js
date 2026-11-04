@@ -210,6 +210,7 @@
         // старый выбор под номером нового вопроса
         isTransitioning = true;
         currentQ = q;
+        document.body.classList.add('in-question'); // маленький логотип на вопросах
         const questionText = document.getElementById('question-text');
         const container = document.getElementById('answer-container');
 
@@ -374,6 +375,7 @@
     function endTest() {
         isTestActive = false; // Отключаем античит
         clearInterval(timerInterval);
+        document.body.classList.remove('in-question');
         document.getElementById('progress-bar').style.width = '100%';
         swipeScreen('question-screen', 'form-screen');
     }

@@ -97,7 +97,10 @@ body {
     margin-bottom: 20px;
     animation: fadeInDown 0.8s ease-out;
     box-shadow: 0 8px 22px rgba(255, 183, 3, 0.35);
+    transition: width 0.3s ease, border-radius 0.3s ease, margin 0.3s ease;
 }
+/* Во время вопросов логотип маленький: место нужно вопросу и кнопке «Следующий» */
+body.in-question .logo { width: 48px; border-radius: 12px; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(255, 183, 3, 0.3); }
 
 h1 {
     font-family: var(--font-serif);
@@ -165,6 +168,16 @@ h2#question-text { font-size: 20px; font-weight: 600; margin-bottom: 25px; line-
 
 .form-group { text-align: left; margin-bottom: 20px; }
 label.field-title { font-weight: 600; font-size: 14px; color: var(--text-main); display: block; margin-bottom: 8px; margin-top: 20px; }
+
+/* Необязательные поля анкеты — отдельным блоком после обязательных */
+.optional-block { margin-top: 28px; padding-top: 6px; border-top: 1px dashed var(--border); }
+.optional-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 14px 0 0; }
+
+/* Правила на стартовом экране */
+.rules { list-style: none; padding: 0; margin: 18px 0 6px; text-align: left; display: grid; gap: 10px; }
+.rules li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: var(--text-main); background: #FFFCF4; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+.rules li span:first-child { flex: 0 0 auto; }
+.rules li.rule-warn { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
 input[type="text"], input[type="tel"] {
     width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 12px; box-sizing: border-box;
     font-size: 16px; transition: all 0.2s; outline: none; background: white;
@@ -222,6 +235,17 @@ input[type="text"]:focus, input[type="tel"]:focus { border-color: var(--primary)
     h2#question-text { font-size: 18px; }
     .option-label { padding: 14px; font-size: 15px; }
     .btn { padding: 14px 20px; font-size: 15px; }
+}
+
+/* Низкие экраны (iPhone SE и т.п.): длинный вопрос + 4 варианта + кнопка без прокрутки */
+@media (max-width: 600px) and (max-height: 700px) {
+    body.in-question .logo { width: 40px; border-radius: 10px; margin-bottom: 10px; }
+    .progress-bg { margin-bottom: 12px; }
+    .header-info { margin-bottom: 14px; }
+    h2#question-text { font-size: 17px; margin-bottom: 16px; line-height: 1.4; }
+    .options { gap: 10px; }
+    .option-label { padding: 11px 14px; }
+    #next-btn { margin-top: 18px; }
 }
 
 /* СТИЛЬНЫЙ ТОАСТ (УВЕДОМЛЕНИЕ) */

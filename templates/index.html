@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css?v=6">
+    <link rel="stylesheet" href="/static/css/style.css?v=7">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body oncontextmenu="return false" oncopy="return false" oncut="return false" onpaste="return false">
@@ -50,12 +50,16 @@
     <!-- СТАРТОВЫЙ ЭКРАН -->
     <div id="start-screen" class="screen active swipe-container">
         <h1 style="font-size: 26px;">Stanford Language Center</h1>
-        <p class="subtitle" style="text-align: center; margin-top: 15px; font-size: 15px;">
-            Вступительное тестирование по английскому языку.<br><br>
-            Количество вопросов: <b id="start-q-total">50</b><br>
-            Время на каждый вопрос ограничено.<br><br>
-            <span style="color: #b91c1c; font-size: 13px;">⚠️ Списывание и скриншоты запрещены.</span>
+        <p class="subtitle" style="text-align: center; margin: 10px 0 0; font-size: 15px;">
+            Вступительное тестирование по английскому языку
         </p>
+        <!-- Правила видны до старта, а не только когда студент их нарушит -->
+        <ul class="rules">
+            <li><span>📝</span><span><b id="start-q-total">50</b> вопросов: 45 с вариантами ответа и 5 на форму глагола</span></li>
+            <li><span>⏱</span><span>30 секунд на вопрос (40 — на форму глагола). Ответ после таймера не засчитывается. Весь тест — до 26 минут</span></li>
+            <li><span>🔄</span><span>Если страница случайно перезагрузится — тест продолжится с того же места</span></li>
+            <li class="rule-warn"><span>⚠️</span><span>Не уходите со вкладки: после 3 раз тест аннулируется. Списывание и скриншоты запрещены</span></li>
+        </ul>
         <button class="btn" onclick="startTest()">Начать тест</button>
     </div>
 
@@ -90,28 +94,9 @@
             <label class="field-title" for="phone">Основной номер телефона <span class="req-star">*</span></label>
             <div class="phone-wrapper">
                 <span class="phone-prefix">+998</span>
-                <input type="tel" id="phone" placeholder="90 123 45 67" maxlength="12" inputmode="numeric" oninput="formatPhoneInput(this)" onkeydown="if(event.key==='Enter') document.getElementById('work_study').focus();" required autocomplete="off">
+                <input type="tel" id="phone" placeholder="90 123 45 67" maxlength="12" inputmode="numeric" oninput="formatPhoneInput(this)" onkeydown="if(event.key==='Enter') this.blur();" required autocomplete="off">
             </div>
 
-            <label class="field-title" for="work_study">Место учебы / работы <span class="opt-label">(необязательно)</span></label>
-            <input type="text" id="work_study" placeholder="Например: Школа №17 или ТГЭУ, 2 курс" autocomplete="off" onkeydown="if(event.key==='Enter') document.getElementById('phone2').focus();">
-
-            <label class="field-title" for="phone2">Второй номер телефона <span class="opt-label">(родители / запасной)</span></label>
-            <div class="phone-wrapper">
-                <span class="phone-prefix">+998</span>
-                <input type="tel" id="phone2" placeholder="93 987 65 43" maxlength="12" inputmode="numeric" oninput="formatPhoneInput(this)" autocomplete="off">
-            </div>
-
-            <label class="field-title">Откуда вы узнали о Stanford LC? <span class="opt-label">(необязательно)</span></label>
-            <div class="source-chips">
-                {% for value, label in sources %}
-                <label class="source-chip">
-                    <input type="radio" name="source" value="{{ value }}">
-                    <span>{{ label }}</span>
-                </label>
-                {% endfor %}
-            </div>
-            
             <label class="field-title">Выберите филиал <span class="req-star">*</span></label>
             <div class="branch-selector">
                 {% for value, label in branches %}
@@ -120,6 +105,30 @@
                     {{ label }}
                 </label>
                 {% endfor %}
+            </div>
+
+            <!-- Необязательные поля — после обязательных, чтобы филиал не терялся внизу -->
+            <div class="optional-block">
+                <p class="optional-title">Дополнительно — по желанию</p>
+
+                <label class="field-title" for="work_study">Место учебы / работы</label>
+                <input type="text" id="work_study" placeholder="Школа №17, ТГЭУ…" autocomplete="off" onkeydown="if(event.key==='Enter') document.getElementById('phone2').focus();">
+
+                <label class="field-title" for="phone2">Второй номер <span class="opt-label">(родители / запасной)</span></label>
+                <div class="phone-wrapper">
+                    <span class="phone-prefix">+998</span>
+                    <input type="tel" id="phone2" placeholder="93 987 65 43" maxlength="12" inputmode="numeric" oninput="formatPhoneInput(this)" onkeydown="if(event.key==='Enter') this.blur();" autocomplete="off">
+                </div>
+
+                <label class="field-title">Откуда вы узнали о Stanford LC?</label>
+                <div class="source-chips">
+                    {% for value, label in sources %}
+                    <label class="source-chip">
+                        <input type="radio" name="source" value="{{ value }}">
+                        <span>{{ label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
             </div>
         </div>
         
@@ -142,7 +151,7 @@
 </div>
 
 <!-- СКРИПТЫ -->
-<script src="/static/js/app.js?v=6"></script>
+<script src="/static/js/app.js?v=7"></script>
 
 </body>
 </html>
