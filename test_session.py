@@ -92,7 +92,7 @@ def create_session():
         "seconds": {},         # позиция -> время ответа по серверным часам
         "shown_at": time.time(),
         "too_fast": 0,         # счетчик сверхбыстрых ответов (флаг списывания)
-        "too_slow": 0,         # счетчик затянутых ответов > 2.5x таймера (подглядывание)
+        "too_slow": 0,         # счетчик ответов после таймера (не засчитаны)
         "started_at": time.time(),
         "finished": False,
         "submitted": False,

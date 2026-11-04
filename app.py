@@ -62,6 +62,10 @@ MIN_TOTAL_SECONDS = 360
 # Минимальный остаток таймера при восстановлении вопроса после перезагрузки
 RESYNC_MIN_SECONDS = 3
 
+# Запас сверх таймера вопроса на задержку сети и анимацию: ответ, пришедший
+# позже time + запас, сервер не засчитывает. Должен быть больше RESYNC_MIN_SECONDS.
+ANSWER_GRACE_SECONDS = 5
+
 # Варианты в анкете: (значение, подпись на кнопке). Форма рисуется из этих списков,
 # а сервер принимает только эти значения — мусор не попадет в бланк и отчеты.
 BRANCHES = [
@@ -202,7 +206,7 @@ def send_to_telegram_sync(message):
 def speed_line(flags, too_fast, too_slow, total_elapsed):
     """Отметка о скорости прохождения для администратора"""
     if flags:
-        return f"🚩 <b>Скорость:</b> подозрительная ({too_fast} сверхбыстрых, {too_slow} затянутых, {int(total_elapsed)} сек общее)"
+        return f"🚩 <b>Скорость:</b> подозрительная ({too_fast} сверхбыстрых, {too_slow} после таймера — не засчитаны, {int(total_elapsed)} сек общее)"
     return f"✅ <b>Скорость:</b> в норме ({int(total_elapsed)} сек)"
 
 def build_result_message(r, speed, resent=False):
@@ -468,11 +472,18 @@ def api_answer(sid):
     q = data["questions"][pos - 1]
     elapsed = time.time() - data.get("shown_at", time.time())
 
-    # Анализ скорости: слишком быстро — подсказка/угадывание, слишком долго — подглядывание
-    if answer.strip() and elapsed < test_session.MIN_ANSWER_SECONDS[q["type"]]:
+    # Таймер соблюдает сервер: ответ, пришедший позже лимита (+ запас на сеть и
+    # отрисовку), не засчитывается — остановка таймера в браузере ничего не дает.
+    # Такой ответ считается пропуском (так он и выглядит на бланке), а сам текст
+    # сохраняется в late_answers для разбора админом.
+    late = bool(answer.strip()) and elapsed > q["time"] + ANSWER_GRACE_SECONDS
+    if late:
+        data["too_slow"] += 1   # с этой правки too_slow = "ответов после таймера"
+        data.setdefault("late_answers", {})[str(pos)] = answer
+        answer = ""
+    elif answer.strip() and elapsed < test_session.MIN_ANSWER_SECONDS[q["type"]]:
+        # Слишком быстро — подсказка или угадывание
         data["too_fast"] += 1
-    elif answer.strip() and elapsed > q["time"] * 2.5:
-        data["too_slow"] += 1
 
     # Серверная проверка ответа — клиент правильных ответов не знает
     data["answers"][str(pos)] = answer
@@ -579,12 +590,14 @@ def submit():
     too_fast = session_data.get("too_fast", 0)
     too_slow = session_data.get("too_slow", 0)
     fast_total = total_elapsed < MIN_TOTAL_SECONDS
-    flags = too_fast + (1 if fast_total else 0) + (1 if too_slow >= 3 else 0)
+    # Каждый ответ после таймера — флаг: при запасе в несколько секунд случайно так не выйдет
+    flags = too_fast + too_slow + (1 if fast_total else 0)
     timing_json = json.dumps({
         "total_sec": int(total_elapsed),
         "per_question": session_data.get("seconds", {}),
         "too_fast": too_fast,
         "too_slow": too_slow,
+        "late_answers": session_data.get("late_answers", {}),
         "fast_total": fast_total
     }, ensure_ascii=False)
 
