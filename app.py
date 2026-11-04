@@ -71,7 +71,7 @@ def _send_tg_worker(message, result_id=None, photo_bytes=None):
         print(f"WARNING: {err_msg}")
         if result_id:
             database.update_telegram_status(result_id, success=False, error=err_msg)
-        return
+        return False
 
     photo_data = photo_bytes.getvalue() if photo_bytes else None
     all_success = True
@@ -152,22 +152,35 @@ def _maybe_send_reports():
     prev = _prev_month(now)
     key = f"monthly-{prev.strftime('%Y-%m')}"
     if database.claim_report(key, "monthly"):
-        text = reports.build_report(prev.year, prev.month)
-        if send_to_telegram_sync(text):
-            print(f"Отчет {key} отправлен")
-        else:
-            database.release_report(key)  # повторим в следующем цикле
-            print(f"Не удалось отправить отчет {key} — повторим")
+        _deliver_report(key, prev.year, prev.month)
 
-    # Годовой отчет: всю первую неделю января за предыдущий год
-    if now.month == 1 and now.day <= 7:
+    # Годовой отчет: в любой день января за предыдущий год
+    # (мягкое окно — догонит, даже если первую неделю января сервер не работал)
+    if now.month == 1:
         key = f"yearly-{now.year - 1}"
         if database.claim_report(key, "yearly"):
-            text = reports.build_report(now.year - 1)
-            if send_to_telegram_sync(text):
-                print(f"Отчет {key} отправлен")
-            else:
-                database.release_report(key)
+            _deliver_report(key, now.year - 1, None)
+
+def _deliver_report(key, year, month):
+    """Отправляет отчет и гарантирует освобождение маркера при любом сбое —
+    иначе исключение между claim и send потеряло бы отчет навсегда."""
+    try:
+        text = reports.build_report(year, month)
+    except Exception as e:
+        database.release_report(key)
+        print(f"Ошибка сборки отчета {key}: {e} — повторим в следующем цикле")
+        return
+
+    if not BOT_TOKEN or not get_chat_ids():
+        database.release_report(key)
+        print(f"Telegram не настроен: отчет {key} будет отправлен после настройки переменных")
+        return
+
+    if send_to_telegram_sync(text):
+        print(f"Отчет {key} отправлен")
+    else:
+        database.release_report(key)  # повторим в следующем цикле
+        print(f"Не удалось отправить отчет {key} — повторим")
 
 def _prev_month(dt):
     return (dt.replace(day=1) - timedelta(days=1)).replace(day=1)
@@ -383,15 +396,30 @@ def submit():
     raw_fio = str(payload.get('fio', '')).strip()
     raw_phone = str(payload.get('phone', '')).strip()
     raw_branch = str(payload.get('branch', '')).strip()
+    raw_work_study = str(payload.get('work_study', '')).strip()
+    raw_phone2 = str(payload.get('phone2', '')).strip()
+    raw_source = str(payload.get('source', '')).strip()
 
     # Серверная валидация ФИО
     if not raw_fio or len(raw_fio) < 3:
         return jsonify({"status": "error", "message": "Введите корректное ФИО"}), 400
 
-    # Проверка формата телефона (+998XXXXXXXXX)
+    # Проверка формата основного телефона (+998XXXXXXXXX)
     clean_digits = re.sub(r'\D', '', raw_phone)
     if len(clean_digits) != 12 or not clean_digits.startswith('998'):
         return jsonify({"status": "error", "message": "Некорректный номер телефона"}), 400
+
+    # Второй номер (опциональный)
+    phone2 = None
+    if raw_phone2:
+        clean_p2 = re.sub(r'\D', '', raw_phone2)
+        if len(clean_p2) == 12 and clean_p2.startswith('998'):
+            phone2 = "+" + clean_p2
+        elif len(clean_p2) == 9:
+            phone2 = "+998" + clean_p2
+
+    work_study = raw_work_study[:100] if raw_work_study else None
+    source = raw_source[:50] if raw_source else None
 
     # Сырые значения — для БД и бланка; экранирование HTML делаем только в тексте для Telegram
     fio = raw_fio[:100]
@@ -435,7 +463,10 @@ def submit():
             time_spent=time_spent,
             answers_map=session_data["answers"],
             flags=flags,
-            timing_json=timing_json
+            timing_json=timing_json,
+            work_study=work_study,
+            phone2=phone2,
+            source=source
         )
     except Exception:
         # Сохранение не удалось — возвращаем студенту возможность повторить
@@ -448,23 +479,34 @@ def submit():
 
     # Отметка о скорости для администратора
     if flags:
-        speed_line = f"🚩 <b>Скорость:</b> подозрительная ({too_fast} сверхбыстрых, {too_slow} затянутых, {int(total_elapsed)} сек общее)\n"
+        speed_line = f"🚩 <b>Скорость:</b> подозрительная ({too_fast} сверхбыстрых, {too_slow} затянутых, {int(total_elapsed)} сек общее)"
     else:
-        speed_line = f"✅ <b>Скорость:</b> в норме ({int(total_elapsed)} сек)\n"
+        speed_line = f"✅ <b>Скорость:</b> в норме ({int(total_elapsed)} сек)"
 
     # Формируем текстовую подпись к фото в Telegram (экранируем пользовательские данные)
-    message = (
-        f"📝 <b>Новый результат теста!</b>\n\n"
-        f"👤 <b>ФИО:</b> {html.escape(fio)}\n"
-        f"📞 <b>Телефон:</b> {phone}\n"
-        f"🏢 <b>Филиал:</b> {html.escape(branch)}\n\n"
-        f"📊 <b>Результат:</b> {score} из {total}\n"
-        f"🎓 <b>Уровень:</b> {level}\n"
-        f"⏱ <b>Время:</b> {html.escape(time_spent)}\n"
-        f"{speed_line}"
-        f"📅 <b>Дата:</b> {now}\n"
+    msg_lines = [
+        "📝 <b>Новый результат теста!</b>\n",
+        f"👤 <b>ФИО:</b> {html.escape(fio)}",
+        f"📞 <b>Телефон:</b> {phone}",
+    ]
+    if phone2:
+        msg_lines.append(f"📞 <b>Телефон 2:</b> {phone2} <i>(родители/запасной)</i>")
+    msg_lines.append(f"🏢 <b>Филиал:</b> {html.escape(branch)}")
+    if work_study:
+        msg_lines.append(f"🎓 <b>Учеба / Работа:</b> {html.escape(work_study)}")
+    if source:
+        msg_lines.append(f"📢 <b>Источник:</b> {html.escape(source)}")
+    
+    msg_lines.extend([
+        "",
+        f"📊 <b>Результат:</b> {score} из {total}",
+        f"🎓 <b>Уровень:</b> {level}",
+        f"⏱ <b>Время:</b> {html.escape(time_spent)}",
+        speed_line,
+        f"📅 <b>Дата:</b> {now}",
         f"🆔 <b>ID записи:</b> #{result_id}"
-    )
+    ])
+    message = "\n".join(msg_lines)
 
     # Генерация официального бланка ответов с подсветкой (по вопросам этой сессии)
     photo_bytes = None
@@ -473,6 +515,9 @@ def submit():
             'id': result_id,
             'fio': fio,
             'phone': phone,
+            'phone2': phone2,
+            'work_study': work_study,
+            'source': source,
             'branch': branch,
             'date': now,
             'score': score,
@@ -542,6 +587,11 @@ def admin_report():
             year, month = prev.year, prev.month
     except ValueError:
         return jsonify({"status": "error", "message": "Формат period: ГГГГ или ГГГГ-ММ"}), 400
+
+    if not BOT_TOKEN or not get_chat_ids():
+        return jsonify({"status": "error", "sent": False,
+                        "message": "Telegram не настроен (BOT_TOKEN / CHAT_ID)",
+                        "preview": reports.build_report(year, month)})
 
     text = reports.build_report(year, month)
     sent = send_to_telegram_sync(text)
